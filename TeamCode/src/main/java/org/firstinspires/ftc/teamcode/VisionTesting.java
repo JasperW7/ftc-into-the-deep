@@ -18,22 +18,45 @@ import org.openftc.easyopencv.OpenCvCamera.AsyncCameraOpenListener;
 import org.openftc.easyopencv.OpenCvPipeline;
 import java.util.List;
 import java.util.ArrayList;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import java.util.*;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.Collections;
 
 @TeleOp
 
 public class VisionTesting extends LinearOpMode{
-    FtcDashboard dashboard = FtcDashboard.getInstance();
-    Telemetry dashboardTelemetry = dashboard.getTelemetry();
+//    FtcDashboard dashboard = FtcDashboard.getInstance();
+//    Telemetry dashboardTelemetry = dashboard.getTelemetry();
+    public Servo servoArm, slideL,slideR,clawL,clawR;
+    public void initHardware(){
+        servoArm = hardwareMap.get(Servo.class, "Servo1");
+        slideL = hardwareMap.get(Servo.class,"slideL");
+        slideR = hardwareMap.get(Servo.class,"slideR");
+        clawL = hardwareMap.get(Servo.class,"clawL");
+        clawR = hardwareMap.get(Servo.class,"clawR");
+
+        servoArm.setPosition(0);
+        slideL.setPosition(0); //0 initial, 0.5 vertical
+        slideR.setPosition(1); //1 initial, 0.5 vertical
+        clawL.setPosition(0.6); //1 initial 0.6 hold
+        clawR.setPosition(0.4); //0 initial, 0.4 hold
+//
+//        slideL.setDirection(Servo.Direction.FORWARD);
+//        slideR.setDirection(Servo.Direction.REVERSE);
+//        clawL.setDirection(Servo.Direction.REVERSE);
+//        clawR.setDirection(Servo.Direction.REVERSE);
+    }
+
+
     OpenCvCamera webcam = null;
     public void initCamera(){
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId","id",hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class,"Webcam 1"),cameraMonitorViewId);
-        FtcDashboard.getInstance().startCameraStream(webcam,0);
+//        FtcDashboard.getInstance().startCameraStream(webcam,0);
         webcam.setPipeline(new pipeLine());
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener(){
 
@@ -52,10 +75,11 @@ public class VisionTesting extends LinearOpMode{
     @Override
     public void runOpMode(){
         initCamera();
+        initHardware();
         waitForStart();
         while (!isStopRequested()){
-            dashboardTelemetry.addData("status","running");
-            dashboardTelemetry.update();
+            telemetry.addData("status","running");
+            telemetry.update();
         }
     }
 
@@ -113,13 +137,21 @@ public class VisionTesting extends LinearOpMode{
                     Imgproc.drawContours(input, Collections.singletonList(points), -1, new Scalar(0, 255, 0), 2);
 
                     double orientationtan = findOrientation(approxCurve.toArray());
-                    dashboardTelemetry.addData("orientationtan", orientationtan);
+                    telemetry.addData("orientationtan", orientationtan);
+                    double servoDegree;
+                    if (orientationtan>=90){
+                        servoDegree = (orientationtan-90)/180;
+                    }
+                    else{
+                        servoDegree = (orientationtan+90)/180;
+                    }
+                    telemetry.addData("servodegree",servoDegree);
+                    servoArm.setPosition(servoDegree);
 
-             }
+                }
             }
 
-            dashboardTelemetry.addData("contours detected", contours.size());
-            dashboardTelemetry.update();
+            telemetry.update();
 
             return input;
         }
