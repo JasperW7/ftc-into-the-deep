@@ -29,26 +29,22 @@ import java.util.Collections;
 @TeleOp
 
 public class VisionTesting extends LinearOpMode{
-//    FtcDashboard dashboard = FtcDashboard.getInstance();
-//    Telemetry dashboardTelemetry = dashboard.getTelemetry();
-    public Servo servoArm, slideL,slideR,clawL,clawR;
+    FtcDashboard dashboard = FtcDashboard.getInstance();
+    Telemetry dashboardTelemetry = dashboard.getTelemetry();
+    public Servo servoArm, wristL,wristR,clawL,clawR;
     public void initHardware(){
         servoArm = hardwareMap.get(Servo.class, "Servo1");
-        slideL = hardwareMap.get(Servo.class,"slideL");
-        slideR = hardwareMap.get(Servo.class,"slideR");
+        wristL = hardwareMap.get(Servo.class,"wristL");
+        wristR = hardwareMap.get(Servo.class,"wristR");
         clawL = hardwareMap.get(Servo.class,"clawL");
         clawR = hardwareMap.get(Servo.class,"clawR");
 
         servoArm.setPosition(0);
-        slideL.setPosition(0); //0 initial, 0.5 vertical
-        slideR.setPosition(1); //1 initial, 0.5 vertical
-        clawL.setPosition(0.6); //1 initial 0.6 hold
-        clawR.setPosition(0.4); //0 initial, 0.4 hold
-//
-//        slideL.setDirection(Servo.Direction.FORWARD);
-//        slideR.setDirection(Servo.Direction.REVERSE);
-//        clawL.setDirection(Servo.Direction.REVERSE);
-//        clawR.setDirection(Servo.Direction.REVERSE);
+        wristL.setPosition(0.99); //1 initial, 0.5 vertical
+        wristR.setPosition(0.03); //0 initial, 0.5 vertical
+        clawL.setPosition(1); //1 initial 0.6 hold
+        clawR.setPosition(0); //0 initial, 0.4 hold
+
     }
 
 
@@ -56,12 +52,13 @@ public class VisionTesting extends LinearOpMode{
     public void initCamera(){
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId","id",hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class,"Webcam 1"),cameraMonitorViewId);
-//        FtcDashboard.getInstance().startCameraStream(webcam,0);
+        FtcDashboard.getInstance().startCameraStream(webcam,0);
         webcam.setPipeline(new pipeLine());
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener(){
 
             @Override
             public void onOpened() {
+
                 webcam.startStreaming(640,480,OpenCvCameraRotation.UPRIGHT);
             }
 
@@ -146,7 +143,7 @@ public class VisionTesting extends LinearOpMode{
                         servoDegree = (orientationtan+90)/180;
                     }
                     telemetry.addData("servodegree",servoDegree);
-                    servoArm.setPosition(servoDegree);
+                    servoArm.setPosition((servoDegree));
 
                 }
             }
