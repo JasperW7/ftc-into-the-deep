@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.arcrobotics.ftclib.controller.PIDController;
+import com.arcrobotics.ftclib.controller.PIDFController;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -21,14 +21,17 @@ public class PIDTuning extends LinearOpMode {
     public DcMotorEx armMotor;
     public DcMotorEx slideMotor;
 
+    public final int armParallel = 30, armUp = 550;
+
     //    Arm PID
-    public static PIDController armPID = new PIDController(0,0,0);
-    public static double armP = 0.0038, armI = 0, armD = 0.0002;
+    public static PIDFController armPIDF = new PIDFController(0,0,0, 0);
+    public static double armP = 0.0022, armI = 0.01, armD = 0.00008, armF = 0;
+//    armP is 0.025 when slide is out
     public static double armTarget = 0.0;
 
     //    Slide PID
-    public static PIDController slidePID = new PIDController(0,0,0);
-    public static double slideP = 0, slideI = 0, slideD = 0;
+    public static PIDFController slidePIDF = new PIDFController(0,0,0, 0);
+    public static double slideP = 0.05, slideI = 0, slideD = 0, slideF = 0;
     public static double slideTarget = 0.0;
 
     public void initHardwware() {
@@ -55,15 +58,20 @@ public class PIDTuning extends LinearOpMode {
         waitForStart();
 
         while (!isStopRequested()) {
-            armMotor.setPower(armPID(armTarget, armMotor));
-            slideMotor.setPower(slidePID(slideTarget, slideMotor));
+            if (armTarget > 0 && armTarget < 700) {
+                armMotor.setPower(armPIDF(armTarget, armMotor));
+            }
+            if (slideTarget > 70 && slideTarget < 800) {
+                slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
+            }
+
         }
     }
 
-    public double armPID(double target, DcMotorEx motor){
-        armPID.setPID(armP,armI,armD);
+    public double armPIDF(double target, DcMotorEx motor){
+        armPIDF.setPIDF(armP,armI,armD,armF);
         int currentPosition = motor.getCurrentPosition();
-        double output = armPID.calculate(currentPosition, target);
+        double output = armPIDF.calculate(currentPosition, target);
 
         dashboardTelemetry.addData("arm current position: ", currentPosition);
         dashboardTelemetry.addData("arm target: ", target);
@@ -71,15 +79,15 @@ public class PIDTuning extends LinearOpMode {
         return output;
     }
 
-    public double slidePID(double target, DcMotorEx motor){
-        slidePID.setPID(slideP,slideI,slideD);
+    public double slidePIDF(double target, DcMotorEx motor){
+        slidePIDF.setPIDF(slideP,slideI,slideD,slideF);
         int currentPosition = motor.getCurrentPosition();
-        double output = slidePID.calculate(currentPosition, target);
+        double output = slidePIDF.calculate(currentPosition, target);
 
         dashboardTelemetry.addData("slide current position: ", currentPosition);
         dashboardTelemetry.addData("slide target: ", target);
         dashboardTelemetry.update();
-        return output;
+        return output/8;
     }
 
 }
