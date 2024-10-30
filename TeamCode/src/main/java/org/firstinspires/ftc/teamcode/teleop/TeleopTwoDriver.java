@@ -29,8 +29,15 @@ import java.util.List;
 public class TeleopTwoDriver extends LinearOpMode{
     DcMotorEx armMotor,fl,fr,bl,br = null;
     Servo servoArm,wrist,clawL,clawR;
+//    SERVO VALUES
+//    not reversed
+//    range = 0, 0.74
+//    parallel = 0
+//    perpendicular = 0.55
+
 //    DcMotorEx slidesMotor = null;
     OpenCvCamera webcam = null;
+
 
     public void initHardware() {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId","id",hardwareMap.appContext.getPackageName());
