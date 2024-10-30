@@ -17,6 +17,7 @@ public class ServoTesting extends LinearOpMode {
     public double clawLOpen = 1.0, clawLClose = 0.6, clawROpen = 0.0, clawRClose = 0.4;
 
     public static double runToPose = 0;
+    public static double wristthing = 0;
 
     public void initHardware() {
         servo0 = hardwareMap.get(Servo.class, "servo0");
@@ -44,6 +45,7 @@ public class ServoTesting extends LinearOpMode {
 
         while (!isStopRequested()) {
             servo0.setPosition(runToPose);
+            servo1.setPosition(wristthing);
             telemetry.addData("pose", servo0.getPosition());
             telemetry.update();
 //            telemetry.addData("motor3 pos", motor3.getCurrentPosition());

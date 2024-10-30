@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -31,12 +32,21 @@ public class TeleopTwoDriver extends LinearOpMode{
     Servo servoArm,wrist,clawL,clawR;
 //    SERVO VALUES
 //    not reversed
-//    range = 0, 0.74
+//     range = 0, 0.74
 //    parallel = 0
 //    perpendicular = 0.55
 
 //    DcMotorEx slidesMotor = null;
     OpenCvCamera webcam = null;
+    public static PIDFController armPIDF = new PIDFController(0,0,0, 0);
+    public static double armP = 0.0022, armI = 0.01, armD = 0.00008, armF = 0;
+    //    armP is 0.025 when slide is out
+    public static double armTarget = 0.0;
+
+    //    Slide PID
+    public static PIDFController slidePIDF = new PIDFController(0,0,0, 0);
+    public static double slideP = 0.05, slideI = 0, slideD = 0, slideF = 0;
+    public static double slideTarget = 0.0;
 
 
     public void initHardware() {
@@ -76,7 +86,7 @@ public class TeleopTwoDriver extends LinearOpMode{
         bl.setDirection(DcMotorEx.Direction.FORWARD);
         fr.setDirection(DcMotorEx.Direction.REVERSE);
         br.setDirection(DcMotorEx.Direction.REVERSE);
-
+        wrist.setPosition(0);
         clawL.setPosition(1);
         clawR.setPosition(0.04);
 
@@ -117,22 +127,39 @@ public class TeleopTwoDriver extends LinearOpMode{
             bl.setPower(backLeftPower);
             br.setPower(backRightPower);
 
+            if (armTarget > 0 && armTarget < 700) {
+                armMotor.setPower(armPIDF(armTarget, armMotor));
+            }
 
-            clawL.setPosition(1);
-            clawR.setPosition(0);
+            if (gamepad1.left_bumper){
+                armTarget ++;
+            }else if (gamepad1.right_bumper){
+                armTarget --;
+            }
+
 
             // arm degree; todo - use settargetposition instead of setpower
-            if (gamepad1.left_bumper){
-                armMotor.setPower(-1);
-//            }else if (gamepad1.right_bumper){
-//                armMotor.setPower(1);
-            }else{
-                armMotor.setPower(0);
+//            if (gamepad1.left_bumper){
+//                armMotor.setPower(-1);
+////            }else if (gamepad1.right_bumper){
+////                armMotor.setPower(1);
+//            }else{
+//                armMotor.setPower(0);
+//            }
+//            int pos = armMotor.getCurrentPosition();
+//            telemetry.addData("pos",pos);
+
+            //    SERVO VALUES
+        //    not reversed
+        //     range = 0, 0.74
+        //    parallel = 0
+        //    perpendicular = 0.55
+
+            if (gamepad1.x){
+                wrist.setPosition(0.55);
+            } else if (gamepad1.y){
+                wrist.setPosition(0);
             }
-            int pos = armMotor.getCurrentPosition();
-            telemetry.addData("pos",pos);
-
-
             telemetry.update();
 
         }
@@ -246,6 +273,27 @@ public class TeleopTwoDriver extends LinearOpMode{
             return 180-orientation;
 
         }
+    }
+    public double armPIDF(double target, DcMotorEx motor){
+        armPIDF.setPIDF(armP,armI,armD,armF);
+        int currentPosition = motor.getCurrentPosition();
+        double output = armPIDF.calculate(currentPosition, target);
+
+        telemetry.addData("arm current position: ", currentPosition);
+        telemetry.addData("arm target: ", target);
+        telemetry.update();
+        return output;
+    }
+
+    public double slidePIDF(double target, DcMotorEx motor){
+        slidePIDF.setPIDF(slideP,slideI,slideD,slideF);
+        int currentPosition = motor.getCurrentPosition();
+        double output = slidePIDF.calculate(currentPosition, target);
+
+        telemetry.addData("slide current position: ", currentPosition);
+        telemetry.addData("slide target: ", target);
+        telemetry.update();
+        return output/8;
     }
 
 }
