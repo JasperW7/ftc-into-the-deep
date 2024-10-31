@@ -136,6 +136,7 @@ public class TeleopTwoDriver extends LinearOpMode{
             }else if (gamepad1.right_bumper){
                 armTarget --;
             }
+            telemetry.addData("arm",armTarget);
 
 
             // arm degree; todo - use settargetposition instead of setpower
