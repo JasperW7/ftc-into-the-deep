@@ -1,10 +1,13 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop;
@@ -26,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Config
 @TeleOp
 public class TeleopTwoDriver extends LinearOpMode{
     DcMotorEx armMotor,fl,fr,bl,br = null;
@@ -90,9 +94,11 @@ public class TeleopTwoDriver extends LinearOpMode{
         clawL.setPosition(1);
         clawR.setPosition(0.04);
 
-        armMotor.setDirection(DcMotorEx.Direction.FORWARD);
-        armMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        armMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        armMotor.setPower(0);
 
 
     }
@@ -132,9 +138,9 @@ public class TeleopTwoDriver extends LinearOpMode{
             }
 
             if (gamepad1.left_bumper){
-                armTarget ++;
+                armTarget += 0.75;
             }else if (gamepad1.right_bumper){
-                armTarget --;
+                armTarget -= 0.75;
             }
             telemetry.addData("arm",armTarget);
 
