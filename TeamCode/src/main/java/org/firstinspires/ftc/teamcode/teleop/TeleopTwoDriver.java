@@ -39,6 +39,8 @@ public class TeleopTwoDriver extends LinearOpMode{
 //     range = 0, 0.74
 //    parallel = 0
 //    perpendicular = 0.55
+    public double wristPar = 0.0, wristPerp = 0.55;
+    public double clawLOpen = 1.0, clawLClose = 0.6, clawROpen = 0.0, clawRClose = 0.4;
 
 //    DcMotorEx slidesMotor = null;
     OpenCvCamera webcam = null;
@@ -51,6 +53,10 @@ public class TeleopTwoDriver extends LinearOpMode{
     public static PIDFController slidePIDF = new PIDFController(0,0,0, 0);
     public static double slideP = 0.05, slideI = 0, slideD = 0, slideF = 0;
     public static double slideTarget = 0.0;
+    boolean dpad = false;
+
+    double rotationPos = 0;
+    boolean cameraOn = false;
 
 
     public void initHardware() {
@@ -62,6 +68,7 @@ public class TeleopTwoDriver extends LinearOpMode{
             @Override
             public void onOpened(){
                 webcam.startStreaming(640,480, OpenCvCameraRotation.UPRIGHT);
+                cameraOn = true;
             }
 
             @Override
@@ -90,10 +97,10 @@ public class TeleopTwoDriver extends LinearOpMode{
         bl.setDirection(DcMotorEx.Direction.FORWARD);
         fr.setDirection(DcMotorEx.Direction.REVERSE);
         br.setDirection(DcMotorEx.Direction.REVERSE);
-        wrist.setPosition(0);
-        clawL.setPosition(1);
-        clawR.setPosition(0.04);
-
+        wrist.setPosition(wristPerp);
+        clawL.setPosition(clawLOpen);
+        clawR.setPosition(clawROpen);
+        servoArm.setPosition(0);
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -113,25 +120,25 @@ public class TeleopTwoDriver extends LinearOpMode{
         while (!isStopRequested()) {
             //armMotor.setPower(0.2);
 
-            telemetry.addData("status","running");
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x * 1.1;
-            double rx = gamepad1.right_stick_x;
-
-            double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx),1);
-            double frontLeftPower = (y+x+rx)/denom;
-            double backLeftPower = (y-x+rx)/denom;
-            double frontRightPower = (y-x-rx)/denom;
-            double backRightPower =  (y+x-rx)/denom;
-            telemetry.addData("fl",frontLeftPower);
-            telemetry.addData("fr",frontRightPower);
-            telemetry.addData("bl",backLeftPower);
-            telemetry.addData("br",backRightPower);
-
-            fl.setPower(frontLeftPower);
-            fr.setPower(frontRightPower);
-            bl.setPower(backLeftPower);
-            br.setPower(backRightPower);
+//            telemetry.addData("status","running");
+//            double y = -gamepad1.left_stick_y;
+//            double x = gamepad1.left_stick_x * 1.1;
+//            double rx = gamepad1.right_stick_x;
+//
+//            double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx),1);
+//            double frontLeftPower = (y+x+rx)/denom;
+//            double backLeftPower = (y-x+rx)/denom;
+//            double frontRightPower = (y-x-rx)/denom;
+//            double backRightPower =  (y+x-rx)/denom;
+//            telemetry.addData("fl",frontLeftPower);
+//            telemetry.addData("fr",frontRightPower);
+//            telemetry.addData("bl",backLeftPower);
+//            telemetry.addData("br",backRightPower);
+//
+//            fl.setPower(frontLeftPower*0.8);
+//            fr.setPower(frontRightPower*0.8);
+//            bl.setPower(backLeftPower*0.8);
+//            br.setPower(backRightPower*0.8);
 
             if (armTarget > 0 && armTarget < 700) {
                 armMotor.setPower(armPIDF(armTarget, armMotor));
@@ -161,12 +168,43 @@ public class TeleopTwoDriver extends LinearOpMode{
         //     range = 0, 0.74
         //    parallel = 0
         //    perpendicular = 0.55
+            if (gamepad1.dpad_down && !dpad){
+                dpad = true;
+                if (cameraOn){
+                    webcam.stopStreaming();
+                    cameraOn = false;
 
-            if (gamepad1.x){
-                wrist.setPosition(0.55);
-            } else if (gamepad1.y){
-                wrist.setPosition(0);
+                }else{
+                    webcam.startStreaming(640,480,OpenCvCameraRotation.UPRIGHT);
+                    cameraOn = true;
+                }
+                telemetry.addData("dpad","pressed");
             }
+            dpad = false;
+            telemetry.addData("dpad","not pressed");
+            if (gamepad1.x){
+                wrist.setPosition(wristPar);
+            } else if (gamepad1.y){
+                wrist.setPosition(wristPerp);
+            }
+
+            if (gamepad1.left_stick_button){
+                clawL.setPosition(clawLOpen);
+                clawR.setPosition(clawROpen);
+            }else if (gamepad1.right_stick_button){
+                clawL.setPosition(clawLClose);
+                clawR.setPosition(clawRClose);
+            }
+            if (!cameraOn) {
+                if (rotationPos <= 1 && gamepad1.left_trigger > 0) {
+                    rotationPos += gamepad1.left_trigger / 100;
+                } else if (rotationPos >= 0 && gamepad1.right_trigger > 0) {
+                    rotationPos -= gamepad1.right_trigger / 100;
+                }
+            }
+            telemetry.addData("camera",cameraOn);
+            telemetry.addData("rotation",rotationPos);
+            servoArm.setPosition(rotationPos);
             telemetry.update();
 
         }
@@ -235,8 +273,9 @@ public class TeleopTwoDriver extends LinearOpMode{
                         servoDegree = (orientationtan+90)/180;
                     }
                     telemetry.addData("servodegree",servoDegree);
-                    servoArm.setPosition((servoDegree));
-
+                    if (cameraOn) {
+                        servoArm.setPosition((servoDegree));
+                    }
                 }
             }
 
