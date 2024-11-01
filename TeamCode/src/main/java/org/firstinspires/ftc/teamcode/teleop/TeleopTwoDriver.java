@@ -32,34 +32,31 @@ import java.util.List;
 @Config
 @TeleOp
 public class TeleopTwoDriver extends LinearOpMode{
-    DcMotorEx armMotor,fl,fr,bl,br = null;
-    Servo servoArm,wrist,clawL,clawR;
-//    SERVO VALUES
-//    not reversed
-//     range = 0, 0.74
-//    parallel = 0
-//    perpendicular = 0.55
+    DcMotorEx armMotor, slidesMotor, fl, fr, bl, br = null;
+    Servo rotation, wrist, clawL, clawR;
+
     public double wristPar = 0.0, wristPerp = 0.55;
     public double clawLOpen = 1.0, clawLClose = 0.6, clawROpen = 0.0, clawRClose = 0.4;
+    double rotationPos = 0;
 
-//    DcMotorEx slidesMotor = null;
-    OpenCvCamera webcam = null;
+//  ARM PID
     public static PIDFController armPIDF = new PIDFController(0,0,0, 0);
     public static double armP = 0.0022, armI = 0.01, armD = 0.00008, armF = 0;
     //    armP is 0.025 when slide is out
     public static double armTarget = 0.0;
 
-    //    Slide PID
+//  SLIDES PID
     public static PIDFController slidePIDF = new PIDFController(0,0,0, 0);
     public static double slideP = 0.05, slideI = 0, slideD = 0, slideF = 0;
     public static double slideTarget = 0.0;
-    boolean dpad = false;
 
-    double rotationPos = 0;
+    OpenCvCamera webcam = null;
     boolean cameraOn = false;
 
+    boolean dpad = false;
 
-    public void initHardware() {
+
+    public void initCamera() {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId","id",hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class,"Webcam 1"),cameraMonitorViewId);
         FtcDashboard.getInstance().startCameraStream(webcam,0);
@@ -76,125 +73,113 @@ public class TeleopTwoDriver extends LinearOpMode{
 
             }
         });
+    }
+
+    public void initHardware() {
         armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
+//        slidesMotor = hardwareMap.get(DcMotorEx.class, "slidesMotor");
         fl = hardwareMap.get(DcMotorEx.class,"frontLeftMotor");
         fr = hardwareMap.get(DcMotorEx.class,"frontRightMotor");
         bl = hardwareMap.get(DcMotorEx.class,"backLeftMotor");
         br = hardwareMap.get(DcMotorEx.class,"backRightMotor");
 
-        servoArm = hardwareMap.get(Servo.class,"Servo1");
+        rotation = hardwareMap.get(Servo.class,"rotation");
         wrist = hardwareMap.get(Servo.class,"wrist");
         clawL = hardwareMap.get(Servo.class,"clawL");
         clawR = hardwareMap.get(Servo.class,"clawR");
-//        sl idesMotor = hardwareMap.get(DcMotorEx.class, "slidesMotor");
-
-        fl.setPower(0);
-        fr.setPower(0);
-        bl.setPower(0);
-        br.setPower(0);
 
         fl.setDirection(DcMotorEx.Direction.FORWARD);
         bl.setDirection(DcMotorEx.Direction.FORWARD);
         fr.setDirection(DcMotorEx.Direction.REVERSE);
         br.setDirection(DcMotorEx.Direction.REVERSE);
+        fl.setPower(0);
+        fr.setPower(0);
+        bl.setPower(0);
+        br.setPower(0);
+
         wrist.setPosition(wristPerp);
         clawL.setPosition(clawLOpen);
         clawR.setPosition(clawROpen);
-        servoArm.setPosition(0);
+        rotation.setPosition(0);
+
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         armMotor.setPower(0);
 
-
+//        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        slideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        slideMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+//        slideMotor.setPower(0);
     }
 
     @Override
     public void runOpMode() {
-
+        initCamera();
         initHardware();
         waitForStart();
 
 
         while (!isStopRequested()) {
-            //armMotor.setPower(0.2);
+            telemetry.addData("status","running");
 
-//            telemetry.addData("status","running");
-//            double y = -gamepad1.left_stick_y;
-//            double x = gamepad1.left_stick_x * 1.1;
-//            double rx = gamepad1.right_stick_x;
-//
-//            double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx),1);
-//            double frontLeftPower = (y+x+rx)/denom;
-//            double backLeftPower = (y-x+rx)/denom;
-//            double frontRightPower = (y-x-rx)/denom;
-//            double backRightPower =  (y+x-rx)/denom;
-//            telemetry.addData("fl",frontLeftPower);
-//            telemetry.addData("fr",frontRightPower);
-//            telemetry.addData("bl",backLeftPower);
-//            telemetry.addData("br",backRightPower);
-//
-//            fl.setPower(frontLeftPower*0.8);
-//            fr.setPower(frontRightPower*0.8);
-//            bl.setPower(backLeftPower*0.8);
-//            br.setPower(backRightPower*0.8);
+//  DRIVE
+            double y = -gamepad1.left_stick_y;
+            double x = gamepad1.left_stick_x * 1.1;
+            double rx = gamepad1.right_stick_x;
 
+            double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx),1);
+            double frontLeftPower = (y+x+rx)/denom;
+            double backLeftPower = (y-x+rx)/denom;
+            double frontRightPower = (y-x-rx)/denom;
+            double backRightPower =  (y+x-rx)/denom;
+            telemetry.addData("fl",frontLeftPower);
+            telemetry.addData("fr",frontRightPower);
+            telemetry.addData("bl",backLeftPower);
+            telemetry.addData("br",backRightPower);
+
+            fl.setPower(frontLeftPower*0.8);
+            fr.setPower(frontRightPower*0.8);
+            bl.setPower(backLeftPower*0.8);
+            br.setPower(backRightPower*0.8);
+
+
+//  ARM & SLIDE PID
             if (armTarget > 0 && armTarget < 700) {
                 armMotor.setPower(armPIDF(armTarget, armMotor));
             }
+//            if (slideTarget > 70 && slideTarget < 800) {
+//                slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
+//            }
 
+//  ARM
             if (gamepad1.left_bumper){
                 armTarget += 0.75;
-            }else if (gamepad1.right_bumper){
+            } else if (gamepad1.right_bumper){
                 armTarget -= 0.75;
             }
             telemetry.addData("arm",armTarget);
 
+//  ROTATION
+            if (gamepad1.dpad_down){
+                if (!dpad) {
+                    dpad = true;
+                    if (cameraOn){
+                        webcam.stopStreaming();
+                        cameraOn = false;
 
-            // arm degree; todo - use settargetposition instead of setpower
-//            if (gamepad1.left_bumper){
-//                armMotor.setPower(-1);
-////            }else if (gamepad1.right_bumper){
-////                armMotor.setPower(1);
-//            }else{
-//                armMotor.setPower(0);
-//            }
-//            int pos = armMotor.getCurrentPosition();
-//            telemetry.addData("pos",pos);
-
-            //    SERVO VALUES
-        //    not reversed
-        //     range = 0, 0.74
-        //    parallel = 0
-        //    perpendicular = 0.55
-            if (gamepad1.dpad_down && !dpad){
-                dpad = true;
-                if (cameraOn){
-                    webcam.stopStreaming();
-                    cameraOn = false;
-
-                }else{
-                    webcam.startStreaming(640,480,OpenCvCameraRotation.UPRIGHT);
-                    cameraOn = true;
+                    } else{
+                        webcam.startStreaming(640,480,OpenCvCameraRotation.UPRIGHT);
+                        cameraOn = true;
+                    }
                 }
-                telemetry.addData("dpad","pressed");
             }
-            dpad = false;
-            telemetry.addData("dpad","not pressed");
-            if (gamepad1.x){
-                wrist.setPosition(wristPar);
-            } else if (gamepad1.y){
-                wrist.setPosition(wristPerp);
+            else {
+                dpad = false;
             }
 
-            if (gamepad1.left_stick_button){
-                clawL.setPosition(clawLOpen);
-                clawR.setPosition(clawROpen);
-            }else if (gamepad1.right_stick_button){
-                clawL.setPosition(clawLClose);
-                clawR.setPosition(clawRClose);
-            }
             if (!cameraOn) {
                 if (rotationPos <= 1 && gamepad1.left_trigger > 0) {
                     rotationPos += gamepad1.left_trigger / 100;
@@ -202,9 +187,27 @@ public class TeleopTwoDriver extends LinearOpMode{
                     rotationPos -= gamepad1.right_trigger / 100;
                 }
             }
+
+//  WRIST
+            if (gamepad1.x){
+                wrist.setPosition(wristPar);
+            } else if (gamepad1.y){
+                wrist.setPosition(wristPerp);
+            }
+
+//  CLAW
+            if (gamepad1.left_stick_button){
+                clawL.setPosition(clawLOpen);
+                clawR.setPosition(clawROpen);
+            } else if (gamepad1.right_stick_button){
+                clawL.setPosition(clawLClose);
+                clawR.setPosition(clawRClose);
+            }
+
+
             telemetry.addData("camera",cameraOn);
             telemetry.addData("rotation",rotationPos);
-            servoArm.setPosition(rotationPos);
+            rotation.setPosition(rotationPos);
             telemetry.update();
 
         }
@@ -274,7 +277,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                     }
                     telemetry.addData("servodegree",servoDegree);
                     if (cameraOn) {
-                        servoArm.setPosition((servoDegree));
+                        rotation.setPosition((servoDegree));
                     }
                 }
             }
@@ -320,6 +323,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 
         }
     }
+
     public double armPIDF(double target, DcMotorEx motor){
         armPIDF.setPIDF(armP,armI,armD,armF);
         int currentPosition = motor.getCurrentPosition();
