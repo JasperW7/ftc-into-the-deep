@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.VisionTesting;
 import org.opencv.core.Core;
@@ -32,11 +33,13 @@ import java.util.List;
 @Config
 @TeleOp
 public class TeleopTwoDriver extends LinearOpMode{
-    DcMotorEx armMotor, slidesMotor, fl, fr, bl, br = null;
+    FtcDashboard dashboard = FtcDashboard.getInstance();
+    Telemetry dashboardTelemetry = dashboard.getTelemetry();
+    DcMotorEx armMotor, slideMotor, fl, fr, bl, br = null;
     Servo rotation, wrist, clawL, clawR;
 
     public double wristPar = 0.0, wristPerp = 0.55;
-    public double clawLOpen = 1.0, clawLClose = 0.6, clawROpen = 0.0, clawRClose = 0.4;
+    public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0;
 
 //  ARM PID
@@ -75,7 +78,7 @@ public class TeleopTwoDriver extends LinearOpMode{
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener(){
             @Override
             public void onOpened(){
-                webcam.startStreaming(640,480, OpenCvCameraRotation.UPRIGHT);
+                webcam.startStreaming(640,480, OpenCvCameraRotation.UPSIDE_DOWN);
                 cameraOn = true;
             }
 
@@ -88,7 +91,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 
     public void initHardware() {
         armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
-//        slidesMotor = hardwareMap.get(DcMotorEx.class, "slidesMotor");
+        slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
         fl = hardwareMap.get(DcMotorEx.class,"frontLeftMotor");
         fr = hardwareMap.get(DcMotorEx.class,"frontRightMotor");
         bl = hardwareMap.get(DcMotorEx.class,"backLeftMotor");
@@ -119,11 +122,11 @@ public class TeleopTwoDriver extends LinearOpMode{
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         armMotor.setPower(0);
 
-//        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        slideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        slideMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-//        slideMotor.setPower(0);
+        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        slideMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        slideMotor.setPower(0);
     }
 
     @Override
@@ -134,7 +137,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 
 
         while (!isStopRequested()) {
-            telemetry.addData("status","running");
+            dashboardTelemetry.addData("status","running");
 
 //  DRIVE
             double[] y = {-gamepad1.left_stick_y, -gamepad2.left_stick_y};
@@ -156,46 +159,53 @@ public class TeleopTwoDriver extends LinearOpMode{
             frontRightPower = (y[driverIndex] - x[driverIndex] - rx[driverIndex]) / denom[driverIndex] * driverMultiplier;
             backRightPower = (y[driverIndex] + x[driverIndex] - rx[driverIndex]) / denom[driverIndex] * driverMultiplier;
 
-            telemetry.addData("fl",frontLeftPower);
-            telemetry.addData("fr",frontRightPower);
-            telemetry.addData("bl",backLeftPower);
-            telemetry.addData("br",backRightPower);
+//            telemetry.addData("fl",frontLeftPower);
+//            telemetry.addData("fr",frontRightPower);
+//            telemetry.addData("bl",backLeftPower);
+//            telemetry.addData("br",backRightPower);
 
             fl.setPower(frontLeftPower);
             fr.setPower(frontRightPower);
             bl.setPower(backLeftPower);
             br.setPower(backRightPower);
-
-
-//  ARM & SLIDE PID
-            if (armTarget > 0 && armTarget < 700) {
-                armMotor.setPower(armPIDF(armTarget, armMotor));
-            }
-//            if (slideTarget > 70 && slideTarget < 800) {
-//                slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
+//            if (gamepad1.dpad_left){
+//                slideTarget+= 0.5;
+//            }else if (gamepad1.dpad_right){
+//                slideTarget -=0.5;
 //            }
 
-//  MODES
-            if (gamepad1.left_bumper && gamepad1.right_bumper) {
-                if (!bumpers) {
-                    bumpers = true;
-                    if (mode == Mode.REST) {
-                        mode = Mode.OUTTAKING;
-                    } else if (mode == Mode.OUTTAKING) {
-                        mode = Mode.REST;
-                    }
-                }
-            } else {
-                bumpers = false;
+//  ARM & SLIDE PID
+            if (armTarget >= 0 && armTarget <= 700) {
+                armMotor.setPower(armPIDF(armTarget, armMotor));
+            }
+            if (slideTarget >= 70 && slideTarget <= 800) {
+                slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
             }
 
+//  MODES
+//            if (gamepad1.left_bumper && gamepad1.right_bumper) {
+//                if (!bumpers) {
+//                    bumpers=true;
+//                    if (mode == Mode.REST) {
+//                        mode = Mode.OUTTAKING;
+//                    } else if (mode == Mode.OUTTAKING) {
+//                        mode = Mode.REST;
+//                    }
+//                }
+//            } else {
+//                bumpers = false;
+//            }
+            dashboardTelemetry.addData("mode type",mode);
             switch (mode) {
                 case REST:
-                    telemetry.addData("mode", "REST");
+                    dashboardTelemetry.addData("mode", "REST");
+                    armTarget = 0;
 //                    arm down
 
                 case OUTTAKING:
-                    telemetry.addData("mode", "OUTTAKING");
+                    dashboardTelemetry.addData("mode", "OUTTAKING");
+                    armTarget = 100;
+
 //                    arm up
 //                    slides at half when right trigger
 //                    slides at full when left trigger
@@ -219,7 +229,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                         public void onOpened(){
                             if (cameraOn) {
                                 webcam.setPipeline(new pipeLine());
-                                webcam.startStreaming(640,480, OpenCvCameraRotation.UPRIGHT);
+                                webcam.startStreaming(640,480, OpenCvCameraRotation.UPSIDE_DOWN);
                             } else {
                                 webcam.stopStreaming();
                             }
@@ -235,13 +245,18 @@ public class TeleopTwoDriver extends LinearOpMode{
                 dpad = false;
             }
 
-            if (!cameraOn) {
+            if (!cameraOn && mode==Mode.REST) {
                 if (rotationPos <= 1 && gamepad1.left_trigger > 0) {
-                    rotationPos += gamepad1.left_trigger / 100 * 0.05;
+                    rotationPos += gamepad1.left_trigger / 100 ;
                 } else if (rotationPos >= 0 && gamepad1.right_trigger > 0) {
-                    rotationPos -= gamepad1.right_trigger / 100 * 0.05;
+                    rotationPos -= gamepad1.right_trigger / 100 ;
                 }
                 rotation.setPosition(rotationPos);
+            }
+            if (gamepad1.a && armTarget<700){
+                armTarget += 0.01;
+            }else if (gamepad1.b && armTarget>0){
+                armTarget -=0.01;
             }
 
 //  WRIST
@@ -259,11 +274,14 @@ public class TeleopTwoDriver extends LinearOpMode{
                 clawL.setPosition(clawLClose);
                 clawR.setPosition(clawRClose);
             }
+            dashboardTelemetry.addData("arm",armMotor.getCurrentPosition());
+            dashboardTelemetry.addData("arm target",armTarget);
+            dashboardTelemetry.addData("slide current",slideMotor.getCurrentPosition());
+            dashboardTelemetry.addData("slide target",slideTarget);
 
-
-            telemetry.addData("camera",cameraOn);
-            telemetry.addData("rotation",rotationPos);
-            telemetry.update();
+            dashboardTelemetry.addData("camera",cameraOn);
+            dashboardTelemetry.addData("rotation",rotationPos);
+            dashboardTelemetry.update();
 
         }
     }
@@ -325,10 +343,10 @@ public class TeleopTwoDriver extends LinearOpMode{
                     telemetry.addData("orientationtan", orientationtan);
                     double servoDegree;
                     if (orientationtan>=90){
-                        servoDegree = (orientationtan-90)/180;
+                        servoDegree = (orientationtan+90)/180;
                     }
                     else{
-                        servoDegree = (orientationtan+90)/180;
+                        servoDegree = (orientationtan-90)/180;
                     }
                     telemetry.addData("servodegree",servoDegree);
                     if (cameraOn) {
