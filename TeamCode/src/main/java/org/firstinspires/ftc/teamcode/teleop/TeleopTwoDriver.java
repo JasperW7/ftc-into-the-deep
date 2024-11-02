@@ -183,24 +183,26 @@ public class TeleopTwoDriver extends LinearOpMode{
             }
 
 //  MODES
-//            if (gamepad1.left_bumper && gamepad1.right_bumper) {
-//                if (!bumpers) {
-//                    bumpers=true;
-//                    if (mode == Mode.REST) {
-//                        mode = Mode.OUTTAKING;
-//                    } else if (mode == Mode.OUTTAKING) {
-//                        mode = Mode.REST;
-//                    }
-//                }
-//            } else {
-//                bumpers = false;
-//            }
+            if (gamepad1.left_bumper && gamepad1.right_bumper) {
+                if (!bumpers) {
+                    bumpers=true;
+                    if (mode == Mode.REST) {
+                        mode = Mode.OUTTAKING;
+                    } else if (mode == Mode.OUTTAKING) {
+                        mode = Mode.REST;
+                    }
+                }
+            } else {
+                bumpers = false;
+            }
+
             dashboardTelemetry.addData("mode type",mode);
             switch (mode) {
                 case REST:
                     dashboardTelemetry.addData("mode", "REST");
                     armTarget = 0;
 //                    arm down
+                    break;
 
                 case OUTTAKING:
                     dashboardTelemetry.addData("mode", "OUTTAKING");
@@ -209,6 +211,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 //                    arm up
 //                    slides at half when right trigger
 //                    slides at full when left trigger
+                    break;
 
             }
 //  ARM
