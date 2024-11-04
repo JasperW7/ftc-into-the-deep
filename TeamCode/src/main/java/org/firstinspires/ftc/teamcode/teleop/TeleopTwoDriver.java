@@ -56,6 +56,8 @@ public class TeleopTwoDriver extends LinearOpMode{
     OpenCvCamera webcam = null;
     boolean cameraOn = false;
 
+
+
     boolean dpad = false;
     boolean bumpers = false;
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
@@ -183,7 +185,7 @@ public class TeleopTwoDriver extends LinearOpMode{
             }
 
 //  MODES
-            if (gamepad1.left_bumper && gamepad1.right_bumper) {
+            if (gamepad1.right_bumper) {
                 if (!bumpers) {
                     bumpers=true;
                     if (mode == Mode.REST) {
@@ -200,30 +202,78 @@ public class TeleopTwoDriver extends LinearOpMode{
             switch (mode) {
                 case REST:
                     dashboardTelemetry.addData("mode", "REST");
-                    armTarget = 0;
+
 //                    arm down
+
+                    /**
+                     *
+                     *
+                     * armTarget = 0;
+                     * wrist.setPosition(wristPar);
+                     *
+                     *
+                     *
+                     * if (gamepad1.right_trigger>0){
+                     *      slideTarget = 355;
+                     * }else if (gamepad1.left_trigger>0){
+                     *      slideTarget = 800;
+                     * }else{
+                     *      slideTarget = 70;
+                     * }
+                     *
+                     *
+                     *
+                     */
                     break;
 
                 case OUTTAKING:
                     dashboardTelemetry.addData("mode", "OUTTAKING");
-                    armTarget = 100;
+
 
 //                    arm up
+
 //                    slides at half when right trigger
 //                    slides at full when left trigger
+                    /**
+                     * armTarget = 700;
+                     * wrist.setPosition(wristPerp);
+                     *
+                     * if (gamepad1.right_trigger>0){
+                     *      slideTarget = 355;
+                     * }else if (gamepad1.left_trigger>0){
+                     *      slideTarget = 800;
+                     * }else{
+                     *      slideTarget = 70;
+                     * }
+                     *
+                     *
+                     *
+                     */
                     break;
 
             }
+
+
 //  ARM
 //            if (gamepad1.left_bumper){
 //                armTarget += 0.75;
 //            } else if (gamepad1.right_bumper){
 //                armTarget -= 0.75;
 //            }
-//            telemetry.addData("arm",armTarget);
+//            telemetry.addData("arm",armTarget)
+
+// SLIDE
+
+            //if (slideTarget!=0){
+    //            if (gamepad2.dpad_up){
+    //                slideTarget += 0.5;
+    //            }else if (gamepad2.dpad_down){
+    //                slideTarget -=0.5;
+    //            }
+            //}
 
 //  ROTATION
-            if (gamepad1.dpad_down){
+            if (gamepad2.right_bumper){
                 if (!dpad) {
                     dpad = true;
 
@@ -262,20 +312,17 @@ public class TeleopTwoDriver extends LinearOpMode{
                 armTarget -=0.01;
             }
 
-//  WRIST
-            if (gamepad1.x){
-                wrist.setPosition(wristPar);
-            } else if (gamepad1.y){
-                wrist.setPosition(wristPerp);
-            }
+////  WRIST
+//            if (gamepad1.x){
+//                wrist.setPosition(wristPar);
+//            } else if (gamepad1.y){
+//                wrist.setPosition(wristPerp);
+//            }
 
 //  CLAW
-            if (gamepad1.left_stick_button){
+            if (gamepad2.a) {
                 clawL.setPosition(clawLOpen);
                 clawR.setPosition(clawROpen);
-            } else if (gamepad1.right_stick_button){
-                clawL.setPosition(clawLClose);
-                clawR.setPosition(clawRClose);
             }
             dashboardTelemetry.addData("arm",armMotor.getCurrentPosition());
             dashboardTelemetry.addData("arm target",armTarget);
