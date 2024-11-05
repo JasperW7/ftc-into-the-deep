@@ -25,7 +25,7 @@ public class PIDTuning extends LinearOpMode {
 
     //    Arm PID
     public static PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    public static double armP = 0.0022, armI = 0.01, armD = 0.00008, armF = 0;
+    public static double armP = 0.0115, armI = 0, armD = 0.00004, armF = 0;
 //    armP is 0.025 when slide is out
     public static double armTarget = 0.0;
 
@@ -76,7 +76,7 @@ public class PIDTuning extends LinearOpMode {
         dashboardTelemetry.addData("arm current position: ", currentPosition);
         dashboardTelemetry.addData("arm target: ", target);
         dashboardTelemetry.update();
-        return output;
+        return output/5;
     }
 
     public double slidePIDF(double target, DcMotorEx motor){

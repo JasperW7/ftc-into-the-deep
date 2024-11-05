@@ -44,10 +44,10 @@ public class ServoTesting extends LinearOpMode {
         waitForStart();
 
         while (!isStopRequested()) {
-            servo0.setPosition(runToPose);
-            servo1.setPosition(wristthing);
-            telemetry.addData("pose", servo0.getPosition());
-            telemetry.update();
+//            servo0.setPosition(runToPose);
+//            servo1.setPosition(wristthing);
+//            telemetry.addData("pose", servo0.getPosition());
+//            telemetry.update();
 //            telemetry.addData("motor3 pos", motor3.getCurrentPosition());
 //            telemetry.update();
 //
@@ -63,15 +63,15 @@ public class ServoTesting extends LinearOpMode {
 //
 //
 ////
-//            if (gamepad1.dpad_right) {
-//                servo0.setPosition(1);
-//            }
-//            else if (gamepad1.dpad_left) {
-//                servo0.setPosition(0);
-//            }
-//            else if (gamepad1.dpad_down) {
-//                servo0.setPosition(0.5);
-//            }
+            if (gamepad1.dpad_right) {
+                servo0.setPosition(1);
+            }
+            else if (gamepad1.dpad_left) {
+                servo0.setPosition(0);
+            }
+            else if (gamepad1.dpad_down) {
+                servo0.setPosition(0.5);
+            }
         }
     }
 
