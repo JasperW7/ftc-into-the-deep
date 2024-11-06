@@ -36,18 +36,21 @@ import java.util.List;
 public class TeleopTwoDriver extends LinearOpMode{
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
-    DcMotorEx armMotor, slideMotor, fl, fr, bl, br = null;
-    Servo rotation, wrist, clawL, clawR;
+    DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
+    Servo rotation, wrist, clawL, clawR, hang;
 
     public double wristPar = 0.0, wristPerp = 0.55;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
-    public double rotationPos = 0;
-    public double armPar = 150, armUp = 500;
+    public double rotationPos = 0.5;
+    public double armPar = 200, armUp = 500;
+    public int slideInterval = 5;
+    public double hangClosed = 0.5, hangOpen = 1;
 
 //  ARM PID
     public static PIDFController armPIDF = new PIDFController(0,0,0, 0);
     public static double armP = 0.0115, armI = 0, armD = 0.00004, armF = 0;
-    //    armP is 0.025 when slide is out
+//    extended PID
+    public static double armPE = 0.023, armIE = 0, armDE = 0, armFE = 0;
     public static double armTarget = 0.0;
 
 //  SLIDES PID
@@ -60,9 +63,12 @@ public class TeleopTwoDriver extends LinearOpMode{
     boolean leftBumperPrevState = false;
     boolean rightBumperPrevState = false;
     boolean gamepad2RightBumperPrevState = false;
+    boolean driver1yPrevState = false;
     boolean cameraOn = false;
     boolean claw = false;
     boolean clawOpen = false;
+    boolean init = true;
+    boolean slideExtended = false;
 
     boolean dpad = false;
     boolean bumpers = false;
@@ -75,6 +81,7 @@ public class TeleopTwoDriver extends LinearOpMode{
     public enum Mode {
         REST,
         OUTTAKING,
+        INTAKING,
         HANG // Maybe
     }
     Mode mode = Mode.REST;
@@ -106,11 +113,14 @@ public class TeleopTwoDriver extends LinearOpMode{
         fr = hardwareMap.get(DcMotorEx.class,"frontRightMotor");
         bl = hardwareMap.get(DcMotorEx.class,"backLeftMotor");
         br = hardwareMap.get(DcMotorEx.class,"backRightMotor");
+        hangL = hardwareMap.get(DcMotorEx.class,"hangL");
+        hangR = hardwareMap.get(DcMotorEx.class,"hangR");
 
         rotation = hardwareMap.get(Servo.class,"rotation");
         wrist = hardwareMap.get(Servo.class,"wrist");
         clawL = hardwareMap.get(Servo.class,"clawL");
         clawR = hardwareMap.get(Servo.class,"clawR");
+        hang = hardwareMap.get(Servo.class,"hang");
 
         fl.setDirection(DcMotorEx.Direction.FORWARD);
         bl.setDirection(DcMotorEx.Direction.FORWARD);
@@ -121,10 +131,20 @@ public class TeleopTwoDriver extends LinearOpMode{
         bl.setPower(0);
         br.setPower(0);
 
+        hangL.setDirection(DcMotorEx.Direction.FORWARD);
+        hangR.setDirection(DcMotorEx.Direction.REVERSE);
+        hangL.setPower(0);
+        hangR.setPower(0);
+        hangL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hangR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hangL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        hangR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         wrist.setPosition(wristPerp);
-        clawL.setPosition(clawLOpen);
-        clawR.setPosition(clawROpen);
-        rotation.setPosition(0);
+        clawL.setPosition(clawLClose);
+        clawR.setPosition(clawRClose);
+        rotation.setPosition(0.5);
+        hang.setPosition(hangClosed);
 
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -169,157 +189,30 @@ public class TeleopTwoDriver extends LinearOpMode{
             frontRightPower = (y[driverIndex] - x[driverIndex] - rx[driverIndex]) / denom[driverIndex] * driverMultiplier;
             backRightPower = (y[driverIndex] + x[driverIndex] - rx[driverIndex]) / denom[driverIndex] * driverMultiplier;
 
-//            telemetry.addData("fl",frontLeftPower);
-//            telemetry.addData("fr",frontRightPower);
-//            telemetry.addData("bl",backLeftPower);
-//            telemetry.addData("br",backRightPower);
-
             fl.setPower(frontLeftPower);
             fr.setPower(frontRightPower);
             bl.setPower(backLeftPower);
             br.setPower(backRightPower);
-//            if (gamepad1.dpad_left){
-//                slideTarget+= 0.5;
-//            }else if (gamepad1.dpad_right){
-//                slideTarget -=0.5;
-//            }
 
 //  ARM & SLIDE PID
+
+            // TODO: remove limits. ARM and SLIDE already has limits.
+//            armMotor.setPower((armTarget > 0 && armTarget < 700) ? armPIDF(armTarget, armMotor) : 0);
+//            slideMotor.setPower((slideTarget > 60 && slideTarget < 800) ? slidePIDF(slideTarget, slideMotor) : 0);
+
             if (armTarget > 0 && armTarget < 700) {
                 armMotor.setPower(armPIDF(armTarget, armMotor));
+            } else {
+                armMotor.setPower(0);
             }
-            if (slideTarget >= 70 && slideTarget <= 800) {
+            if (slideTarget > 60 && slideTarget < 800) {
                 slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
+            } else {
+                slideMotor.setPower(0);
             }
-
-//  MODES
-            boolean rightBumperCurrentState = gamepad1.right_bumper;
-            if (rightBumperCurrentState && !rightBumperPrevState) {
-                // Right bumper has just been pressed
-                if (mode == Mode.REST) {
-                    mode = Mode.OUTTAKING;
-                } else if (mode == Mode.OUTTAKING) {
-                    mode = Mode.REST;
-                }
-            }
-            rightBumperPrevState = rightBumperCurrentState;
-
-
-            telemetry.addData("mode type",mode);
-            switch (mode) {
-                case REST:
-                    // Arm down when not in sequence
-                    if (!sequence) {
-                        armTarget = armPar;
-
-                        // Adjust wrist position based on gamepad1.left_bumper
-                        if (gamepad1.left_bumper) {
-                            wrist.setPosition(wristPar);
-                        } else {
-                            wrist.setPosition(wristPerp);
-                        }
-                    }
-
-                    // Handle gamepad2.right_bumper for toggling camera
-                    boolean gamepad2RightBumperCurrentState = gamepad2.right_bumper;
-                    if (gamepad2RightBumperCurrentState && !gamepad2RightBumperPrevState) {
-                        // Right bumper on gamepad2 has just been pressed
-                        cameraOn = !cameraOn;
-
-                        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-                            @Override
-                            public void onOpened() {
-                                if (cameraOn) {
-                                    webcam.startStreaming(640, 480, OpenCvCameraRotation.UPSIDE_DOWN);
-                                } else {
-                                    webcam.stopStreaming();
-                                }
-                            }
-
-                            @Override
-                            public void onError(int errorCode) {
-                                // Handle error if necessary
-                            }
-                        });
-                    }
-                    gamepad2RightBumperPrevState = gamepad2RightBumperCurrentState;
-
-                    // Adjust rotation if camera is off
-                    if (!cameraOn) {
-                        if (gamepad1.left_trigger > 0 && rotationPos < 1) {
-                            rotationPos += gamepad1.left_trigger / 100;
-                            if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
-                        }
-                        if (gamepad1.right_trigger > 0 && rotationPos > 0) {
-                            rotationPos -= gamepad1.right_trigger / 100;
-                            if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
-                        }
-                        rotation.setPosition(rotationPos);
-                    }
-
-                    // Handle gamepad2.left_bumper for executing sequence
-                    boolean leftBumperCurrentState = gamepad2.left_bumper;
-                    if (leftBumperCurrentState && !leftBumperPrevState) {
-                        // The left bumper has just been pressed
-                        sequence = true;
-
-                        // Start sequence actions
-                        armTarget = 0;
-                        delay.
-
-                        wrist.setPosition(wristPar);
-                        clawL.setPosition(clawLClose);
-                        clawR.setPosition(clawRClose);
-
-                        // Optionally, wait or check for arm to reach position 0
-                        // Implement necessary synchronization here
-
-//                        armTarget = 25;
-//                        slideTarget = 70;
-
-                        // Sequence completed
-//                        sequence = false;
-                    }
-                    leftBumperPrevState = leftBumperCurrentState;
-
-                    break;
-
-                case OUTTAKING:
-                    // Handle OUTTAKING mode actions
-                    // Add your code for OUTTAKING mode here
-                    break;
-            }
-
-
-//  ARM
-//            if (gamepad1.left_bumper){
-//                armTarget += 0.75;
-//            } else if (gamepad1.right_bumper){
-//                armTarget -= 0.75;
-//            }
-//            telemetry.addData("arm",armTarget)
-
-// SLIDE
-
-            //if (slideTarget!=0){
-    //            if (gamepad2.dpad_up){
-    //                slideTarget += 0.5;
-    //            }else if (gamepad2.dpad_down){
-    //                slideTarget -=0.5;
-    //            }
-            //}
-
-//  ROTATION
-
-
-////  WRIST
-//            if (gamepad1.x){
-//                wrist.setPosition(wristPar);
-//            } else if (gamepad1.y){
-//                wrist.setPosition(wristPerp);
-//            }
 
 //  CLAW
+//            TODO: combine two if statements gamepad2.a and !claw
             if (gamepad2.a) {
                 if (!claw) {
                     claw=true;
@@ -337,6 +230,164 @@ public class TeleopTwoDriver extends LinearOpMode{
                 clawR.setPosition(clawROpen);
             }
 
+//  SLIDES
+        slideTarget += (gamepad2.dpad_up) ? slideInterval : 0;
+        slideTarget -= (gamepad2.dpad_down) ? slideInterval : 0;
+        slideTarget = Math.max(60, Math.min(700, slideTarget));
+
+        slideExtended = slideTarget > 300;
+
+//  ARM
+//            TODO: add limits for arm
+        armTarget += (gamepad1.left_trigger > 0) ? 0.8 : 0;
+        armTarget -= (gamepad1.right_trigger > 0) ? 0.8 : 0;
+        armPar = (slideTarget > 300) ? 150 : 180;
+
+//  MODES
+            boolean rightBumperCurrentState = gamepad1.right_bumper;
+            if (rightBumperCurrentState && !rightBumperPrevState) {
+                if (mode == Mode.REST) {
+                    mode = Mode.OUTTAKING;
+                    slideInterval = 8;
+                } else if (mode == Mode.OUTTAKING) {
+                    mode = Mode.REST;
+                    slideInterval = 5;
+                }
+                init = true;
+            }
+            rightBumperPrevState = rightBumperCurrentState;
+
+
+            boolean driver1yCurrentState = gamepad1.y;
+            if (driver1yCurrentState && !driver1yPrevState) {
+                if (mode == Mode.REST) {
+                    mode = Mode.HANG;
+                } else if (mode == Mode.HANG) {
+                    mode = Mode.REST;
+                }
+                init = true;
+            }
+            driver1yPrevState = driver1yCurrentState;
+
+
+            telemetry.addData("mode type",mode);
+            switch (mode) {
+/** REST */
+                case REST:
+                    if (init) {
+                        slideTarget = 60;
+                        armTarget = armPar;
+                        webcam.stopStreaming();
+                        rotation.setPosition(0.5);
+                        hang.setPosition(hangClosed);
+                    }
+                    init = false;
+
+                    if (gamepad1.left_bumper) {
+                        wrist.setPosition(wristPar);
+                    } else {
+                        wrist.setPosition(wristPerp);
+                    }
+
+// CHANGE TO INTAKING
+                    if (slideTarget > 100) {
+                        mode = Mode.INTAKING;
+                        init = true;
+                    }
+
+                    break;
+
+/** INTAKING */
+                case INTAKING:
+                    if (init) {
+                        armTarget = armPar;
+                        wrist.setPosition(wristPar);
+                        clawOpen = true;
+                    }
+                    init = false;
+
+//  ROTATION
+                    boolean gamepad2RightBumperCurrentState = gamepad2.right_bumper;
+                    if (gamepad2RightBumperCurrentState && !gamepad2RightBumperPrevState) {
+                        cameraOn = !cameraOn;
+                        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+                            @Override
+                            public void onOpened() {
+                                if (cameraOn) {
+                                    webcam.startStreaming(640, 480, OpenCvCameraRotation.UPSIDE_DOWN);
+                                } else {
+                                    webcam.stopStreaming();
+                                }
+                            }
+                            @Override
+                            public void onError(int errorCode) {}
+                        });
+                    }
+                    gamepad2RightBumperPrevState = gamepad2RightBumperCurrentState;
+
+                    if (!cameraOn) {
+                        if (gamepad2.left_trigger > 0 && rotationPos < 1) {
+                            rotationPos += gamepad2.left_trigger / 100;
+                            if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
+                        }
+                        if (gamepad2.right_trigger > 0 && rotationPos > 0) {
+                            rotationPos -= gamepad2.right_trigger / 100;
+                            if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
+                        }
+                        rotation.setPosition(rotationPos);
+                    }
+
+//  LOWER ARM
+                    armTarget = (gamepad2.left_bumper) ? 0 : armPar;
+
+//  CHANGE TO REST
+                    if (slideTarget <= 80){
+                        mode = Mode.REST;
+                    }
+
+                    break;
+
+/** OUTTAKING */
+                case OUTTAKING:
+                    if (init) {
+                        slideTarget = 100;
+                        armTarget = armUp;
+                        webcam.stopStreaming();
+                        rotation.setPosition(0.5);
+                    }
+                    init = false;
+
+//                    TODO: wrist position depends on height of slides.
+
+                    break;
+
+/** HANG */
+                case HANG:
+                    if (init) {
+                        clawOpen = false;
+                        armTarget = armPar + 50;
+                        slideTarget = 100;
+                        wrist.setPosition(wristPerp);
+                        hang.setPosition(hangOpen);
+                        rotation.setPosition(0.5);
+                    }
+
+//                    TODO: test direction of motors are correct
+                    if (gamepad1.a) {
+                        hangL.setPower(0.5);
+                        hangR.setPower(0.5);
+                    } else if (gamepad1.b) {
+                        hangL.setPower(-0.5);
+                        hangR.setPower(-0.5);
+                    } else {
+                        hangL.setPower(0);
+                        hangR.setPower(0);
+                    }
+
+                    break;
+            }
+
+
             telemetry.addData("arm current",armMotor.getCurrentPosition());
             telemetry.addData("arm target",armTarget);
             telemetry.addData("slide current",slideMotor.getCurrentPosition());
@@ -344,6 +395,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 
             telemetry.addData("camera",cameraOn);
             telemetry.addData("rotation",rotationPos);
+            telemetry.addData("init",init);
             telemetry.update();
 
         }
@@ -461,12 +513,14 @@ public class TeleopTwoDriver extends LinearOpMode{
     }
 
     public double armPIDF(double target, DcMotorEx motor){
-        armPIDF.setPIDF(armP,armI,armD,armF);
+        if (slideExtended) {
+            armPIDF.setPIDF(armPE,armIE,armDE,armFE);
+        } else {
+            armPIDF.setPIDF(armP,armI,armD,armF);
+        }
         int currentPosition = motor.getCurrentPosition();
         double output = armPIDF.calculate(currentPosition, target);
 
-//        telemetry.addData("arm current position: ", currentPosition);
-//        telemetry.addData("arm target: ", target);
         telemetry.update();
         return output/5;
     }
@@ -475,9 +529,7 @@ public class TeleopTwoDriver extends LinearOpMode{
         slidePIDF.setPIDF(slideP,slideI,slideD,slideF);
         int currentPosition = motor.getCurrentPosition();
         double output = slidePIDF.calculate(currentPosition, target);
-//
-//        telemetry.addData("slide current position: ", currentPosition);
-//        telemetry.addData("slide target: ", target);
+
         telemetry.update();
         return output/8;
     }
