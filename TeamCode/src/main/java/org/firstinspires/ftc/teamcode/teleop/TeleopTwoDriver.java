@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
+
 
 import org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -76,7 +76,6 @@ public class TeleopTwoDriver extends LinearOpMode{
     double driver1Multiplier = 0.8;
     double driver2Multiplier = 0.15;
 
-    private ElapsedTime delay = new ElapsedTime();
 
     public enum Mode {
         REST,
