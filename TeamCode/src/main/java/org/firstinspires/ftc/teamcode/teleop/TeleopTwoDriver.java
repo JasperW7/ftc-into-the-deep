@@ -283,14 +283,11 @@ public class TeleopTwoDriver extends LinearOpMode{
                     }
                     init = false;
 
-                    if (gamepad1.left_bumper) {
-                        wrist.setPosition(wristPar);
-                    } else {
-                        wrist.setPosition(wristPerp);
-                    }
+// WRIST POSITION
+                    wrist.setPosition(gamepad1.left_bumper ? wristPar : wristPerp);
 
 // CHANGE TO INTAKING
-                    if (slideTarget > 100) {
+                    if (slideTarget > 80) {
                         mode = Mode.INTAKING;
                         init = true;
                     }
@@ -341,7 +338,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                     armTarget = (gamepad2.left_bumper) ? 0 : armPar;
 
 //  CHANGE TO REST
-                    if (slideTarget <= 80){
+                    if (slideTarget <= 100){
                         mode = Mode.REST;
                     }
 
@@ -354,6 +351,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                         armTarget = armUp;
                         webcam.stopStreaming();
                         rotation.setPosition(0.5);
+                        wrist.setPosition(wristPerp);
                     }
                     init = false;
 
