@@ -247,33 +247,28 @@ public class TeleopTwoDriver extends LinearOpMode{
 
 //  MODES
         boolean rightBumperCurrentState = gamepad1.right_bumper;
-            if (rightBumperCurrentState && !rightBumperPrevState) {
-                if (mode == Mode.REST) {
-                    mode = Mode.OUTTAKING;
-                    slideInterval = 8;
-                } else if (mode == Mode.OUTTAKING) {
-                    retractSlide = true;
-                    slideInterval = 4;
-                }
-                init = true;
+        if (rightBumperCurrentState && !rightBumperPrevState) {
+            if (mode == Mode.REST) {
+                mode = Mode.OUTTAKING;
+                slideInterval = 8;
+            } else if (mode == Mode.OUTTAKING) {
+                retractSlide=true;
+                slideInterval = 4;
             }
+            init = true;
+        }
+        rightBumperPrevState = rightBumperCurrentState;
 
-// Update the previous state only when the bumper is released
-            if (!rightBumperCurrentState) {
-                rightBumperPrevState = false;
+        if (retractSlide) {
+            if (slideTarget > 100) {
+                slideTarget -= 2;
             } else {
-                rightBumperPrevState = true;
+                retractSlide = false;
+                mode=Mode.REST;
             }
+        }
+        telemetry.addData("retract",retractSlide);
 
-// Handle slide retraction and return to REST mode
-            if (retractSlide) {
-                if (slideTarget > 100) {
-                    slideTarget -= 2;
-                } else {
-                    retractSlide = false;
-                    mode = Mode.REST;
-                }
-            }
 
 
             boolean driver1yCurrentState = gamepad1.y;
