@@ -58,7 +58,7 @@ public class PIDTuning extends LinearOpMode {
         waitForStart();
 
         while (!isStopRequested()) {
-            if (armTarget > 0 && armTarget < 700) {
+            if (armTarget > 0 && armTarget < 3000) {
                 armMotor.setPower(armPIDF(armTarget, armMotor));
             }
             if (slideTarget > 70 && slideTarget < 800) {

@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 import org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop;
@@ -41,18 +40,18 @@ public class TeleopTwoDriver extends LinearOpMode{
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawL, clawR, hang;
 
-    public double wristPar = 0.0, wristPerp = 0.55;
+    public double wristPar = 0.1, wristPerp = 0.65;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
-    public double armPar = 200, armUp = 500;
+    public double armPar = 150, armUp = 2000;
     public int slideInterval = 5;
     public double hangClosed = 0.5, hangOpen = 1;
 
 //  ARM PID
     public static PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    public static double armP = 0.0115, armI = 0, armD = 0.00004, armF = 0;
+    public static double armP = 0.2, armI = 0, armD = 0.002, armF = 0;
 //    extended PID
-    public static double armPE = 0.023, armIE = 0, armDE = 0, armFE = 0;
+    public static double armPE = 0.2, armIE = 0, armDE = 0.002, armFE = 0;
     public static double armTarget = 0.0;
 
 //  SLIDES PID
@@ -73,13 +72,13 @@ public class TeleopTwoDriver extends LinearOpMode{
     boolean slideExtended = false;
     boolean dpad = false;
     boolean bumpers = false;
-    ElapsedTime delay = new ElapsedTime();
     boolean retractSlide = false;
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double driver1Multiplier = 0.8;
     double driver2Multiplier = 0.3;
     double armTempTarget = armPar;
+    double slideMax = 500;
 
     public enum Mode {
         REST,
@@ -203,15 +202,23 @@ public class TeleopTwoDriver extends LinearOpMode{
 //            armMotor.setPower((armTarget > 0 && armTarget < 700) ? armPIDF(armTarget, armMotor) : 0);
 //            slideMotor.setPower((slideTarget > 60 && slideTarget < 800) ? slidePIDF(slideTarget, slideMotor) : 0);
 
-            if (armTarget > 0 && armTarget < 700) {
+            if (armTarget > 0 && armTarget < 2500) {
                 armMotor.setPower(armPIDF(armTarget, armMotor));
             } else {
                 armMotor.setPower(0);
             }
-            if (slideTarget > 60 && slideTarget < 800) {
+            if (slideTarget > 60 && slideTarget < slideMax) {
                 slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
             } else {
                 slideMotor.setPower(0);
+            }
+
+//           TODO: make max slide target cap so it doesn't increase futrher. (rn slide doesn't move but target increases
+
+            if (mode==Mode.INTAKING){
+                slideMax = 500;
+            }else{
+                slideMax = 800;
             }
 
 //  CLAW
@@ -233,17 +240,16 @@ public class TeleopTwoDriver extends LinearOpMode{
             }
 
 //  SLIDES
-        slideTarget += (gamepad2.dpad_up) ? slideInterval : 0;
-        slideTarget -= (gamepad2.dpad_down) ? slideInterval : 0;
-        slideTarget = Math.max(60, Math.min(700, slideTarget));
+        slideTarget += (gamepad2.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
+        slideTarget -= (gamepad2.dpad_down && slideTarget>60) ? slideInterval : 0;
 
         slideExtended = slideTarget > 300;
 
 //  ARM
 //            TODO: add limits for arm
-        armTempTarget += (gamepad1.left_trigger > 0) ? 0.8 : 0;
-        armTempTarget -= (gamepad1.right_trigger > 0) ? 0.8 : 0;
-        armPar = (slideTarget > 300) ? 180 : 150;
+        armTempTarget += (gamepad1.left_trigger > 0) ? 2 : 0;
+        armTempTarget -= (gamepad1.right_trigger > 0) ? 2 : 0;
+        armPar = (slideTarget > 300) ? 300 : 250;
 
 //  MODES
         boolean rightBumperCurrentState = gamepad1.right_bumper;
@@ -251,20 +257,21 @@ public class TeleopTwoDriver extends LinearOpMode{
             if (mode == Mode.REST) {
                 mode = Mode.OUTTAKING;
                 slideInterval = 8;
+                init = true;
             } else if (mode == Mode.OUTTAKING) {
                 retractSlide=true;
                 slideInterval = 4;
             }
-            init = true;
         }
         rightBumperPrevState = rightBumperCurrentState;
 
         if (retractSlide) {
-            if (slideTarget > 100) {
-                slideTarget -= 2;
+            if (slideTarget > 70) {
+                slideTarget -= 6;
             } else {
                 retractSlide = false;
                 mode=Mode.REST;
+                init = true;
             }
         }
         telemetry.addData("retract",retractSlide);
@@ -320,6 +327,8 @@ public class TeleopTwoDriver extends LinearOpMode{
                     }
                     init = false;
 
+
+
 //  ROTATION
                     boolean gamepad2RightBumperCurrentState = gamepad2.right_bumper;
                     if (gamepad2RightBumperCurrentState && !gamepad2RightBumperPrevState) {
@@ -329,6 +338,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                             public void onOpened() {
                                 if (cameraOn) {
                                     webcam.startStreaming(640, 480, OpenCvCameraRotation.UPSIDE_DOWN);
+                                    FtcDashboard.getInstance().startCameraStream(webcam,0);
                                 } else {
                                     webcam.stopStreaming();
                                 }
@@ -352,10 +362,10 @@ public class TeleopTwoDriver extends LinearOpMode{
                     }
 
 //  LOWER ARM
-                    armTarget = (gamepad2.left_bumper) ? 50 : armTempTarget;
+                    armTarget = (gamepad2.left_bumper) ? 0 : armTempTarget;
 
 //  CHANGE TO REST
-                    if (slideTarget <= 100){
+                    if (slideTarget <= 80){
                         mode = Mode.REST;
                     }
 
@@ -414,10 +424,17 @@ public class TeleopTwoDriver extends LinearOpMode{
             telemetry.addData("slide current",slideMotor.getCurrentPosition());
             telemetry.addData("slide target",slideTarget);
 
+            dashboardTelemetry.addData("arm current",armMotor.getCurrentPosition());
+            dashboardTelemetry.addData("arm target",armTarget);
+            dashboardTelemetry.addData("slide current",slideMotor.getCurrentPosition());
+            dashboardTelemetry.addData("slide target",slideTarget);
+
             telemetry.addData("camera",cameraOn);
             telemetry.addData("rotation",rotationPos);
             telemetry.addData("init",init);
+
             telemetry.update();
+            dashboardTelemetry.update();
 
         }
     }
