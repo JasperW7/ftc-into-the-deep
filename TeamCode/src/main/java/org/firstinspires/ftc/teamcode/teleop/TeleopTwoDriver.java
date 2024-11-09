@@ -56,7 +56,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 
 //  SLIDES PID
     public static PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    public static double slideP = 0.05, slideI = 0, slideD = 0, slideF = 0;
+    public static double slideP = 0.1, slideI = 0, slideD = 0.001, slideF = 0;
     public static double slideTarget = 0.0;
 
     OpenCvCamera webcam = null;
@@ -218,9 +218,9 @@ public class TeleopTwoDriver extends LinearOpMode{
 //           TODO: make max slide target cap so it doesn't increase futrher. (rn slide doesn't move but target increases
 
             if (mode==Mode.INTAKING){
-                slideMax = 500;
+                slideMax = 2500;
             }else{
-                slideMax = 800;
+                slideMax = 2800;
             }
 
 
