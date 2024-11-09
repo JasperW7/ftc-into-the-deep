@@ -77,13 +77,15 @@ public class TeleopTwoDriver extends LinearOpMode{
     boolean retracted = true;
     boolean xHold = false;
     boolean xPress = false;
+    boolean slideOuttake = false;
+
 
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
-    double driver1Multiplier = 0.8;
+    double driver1Multiplier = 1;
     double driver2Multiplier = 0.25;
     double armTempTarget = armPar;
-    double slideMax = 1400;
+    double slideMax = 1800;
     double maxWrist;
 
     public enum Mode {
@@ -221,9 +223,9 @@ public class TeleopTwoDriver extends LinearOpMode{
 
 
             if (mode==Mode.INTAKING){
-                slideMax = 1400;
+                slideMax = 1800;
             }else{
-                slideMax = 2900;
+                slideMax = 2800;
             }
 
 
@@ -257,6 +259,9 @@ public class TeleopTwoDriver extends LinearOpMode{
 
             if (xPress){
                 if (mode == Mode.INTAKING) {
+                    armTempTarget = 400;
+                    wrist.setPosition(wristPerp);
+                    armTarget = armTempTarget;
                     retractSlide = true;
 
                 }else if (mode == Mode.REST){
@@ -267,8 +272,8 @@ public class TeleopTwoDriver extends LinearOpMode{
 
 //  SLIDES
         slideTarget += (gamepad2.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
-        slideTarget -= (gamepad2.dpad_down && slideTarget>200) ? slideInterval : 0;
-        slideTarget = Math.min(2900, Math.max(200, slideTarget));
+        slideTarget -= (gamepad2.dpad_down && slideTarget>500) ? slideInterval : 0;
+        slideTarget = Math.min(2800, Math.max(200, slideTarget));
 
         slideExtended = slideTarget > 300;
 
@@ -307,6 +312,8 @@ public class TeleopTwoDriver extends LinearOpMode{
             }
 
         }
+
+
         telemetry.addData("retract",retractSlide);
 
         if (gamepad2.x){
@@ -330,6 +337,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 /** REST */
                 case REST:
                     if (init) {
+                        webcam.stopStreaming();
                         wrist.setPosition(wristPerp);
                         slideTarget = 200;
                         armTempTarget = armPar;
@@ -402,7 +410,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                     }
 
 //  LOWER ARM
-                    armTarget = (gamepad2.left_bumper) ? 225 : armTempTarget;
+                    armTarget = (gamepad2.left_bumper) ? 150 : armTempTarget;
 
 //  CHANGE TO REST
                     if (slideTarget <= 250){
@@ -414,14 +422,20 @@ public class TeleopTwoDriver extends LinearOpMode{
 /** OUTTAKING */
                 case OUTTAKING:
                     if (init) {
-
-                        slideTarget = 100;
-                        armTempTarget = armUp;
+                        armTempTarget = 2000;
+                        slideOuttake = true;
                         webcam.stopStreaming();
                         rotation.setPosition(0.5);
                         wrist.setPosition(wristPar);
+
+
                     }
                     init = false;
+
+                    if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<50){
+                        slideTarget = 1200;
+                        slideOuttake = false;
+                    }
 
                     if (gamepad2.left_bumper){
                         wrist.setPosition(wristOuttake);
