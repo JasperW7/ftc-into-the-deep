@@ -40,7 +40,7 @@ public class TeleopTwoDriver extends LinearOpMode{
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawL, clawR, hang;
 
-    public double wristPar = 0.1, wristPerp = 0.65;
+    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.7;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
     public double armPar = 150, armUp = 2000;
@@ -48,15 +48,16 @@ public class TeleopTwoDriver extends LinearOpMode{
     public double hangClosed = 0.5, hangOpen = 1;
 
 //  ARM PID
-    public static PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    public static double armP = 0.2, armI = 0, armD = 0.002, armF = 0;
+    PIDFController armPIDF = new PIDFController(0,0,0, 0);
+    double armP = 0.2, armI = 0, armD = 0.002, armF = 0;
 //    extended PID
-    public static double armPE = 0.2, armIE = 0, armDE = 0.002, armFE = 0;
-    public static double armTarget = 0.0;
+    double armPE = 0.2, armIE = 0, armDE = 0.002, armFE = 0;
+    double armTarget = 0.0;
 
 //  SLIDES PID
     public static PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    public static double slideP = 0.1, slideI = 0, slideD = 0.001, slideF = 0;
+    public static double slideP = 0.1, slideI = 0, slideD = 0.0013, slideF = 0;
+    public static double slidePE = 0.2, slideIE = 0, slideDE = 0, slideFE = 0;
     public static double slideTarget = 0.0;
 
     OpenCvCamera webcam = null;
@@ -82,7 +83,7 @@ public class TeleopTwoDriver extends LinearOpMode{
     double driver1Multiplier = 0.8;
     double driver2Multiplier = 0.25;
     double armTempTarget = armPar;
-    double slideMax = 500;
+    double slideMax = 1400;
     double maxWrist;
 
     public enum Mode {
@@ -220,9 +221,9 @@ public class TeleopTwoDriver extends LinearOpMode{
 
 
             if (mode==Mode.INTAKING){
-                slideMax = 2500;
+                slideMax = 1400;
             }else{
-                slideMax = 2800;
+                slideMax = 2300;
             }
 
 
@@ -267,7 +268,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 //  SLIDES
         slideTarget += (gamepad2.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
         slideTarget -= (gamepad2.dpad_down && slideTarget>60) ? slideInterval : 0;
-        slideTarget = Math.min(800, Math.max(60, slideTarget));
+        slideTarget = Math.min(2300, Math.max(60, slideTarget));
 
         slideExtended = slideTarget > 300;
 
@@ -277,7 +278,7 @@ public class TeleopTwoDriver extends LinearOpMode{
         armTempTarget -= (gamepad1.right_trigger > 0) ? 3 : 0;
         armTempTarget = Math.min(2500, Math.max(0, armTempTarget));
 
-        armPar = (slideTarget > 300) ? 300 : 350;
+        armPar = (slideTarget > 300) ? 300 : 400;
 
 
 //  MODES
@@ -329,6 +330,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 /** REST */
                 case REST:
                     if (init) {
+                        wrist.setPosition(wristPerp);
                         slideTarget = 60;
                         armTempTarget = armPar;
                         webcam.stopStreaming();
@@ -341,7 +343,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                     armTarget = armTempTarget;
 
 // WRIST POSITION
-                    wrist.setPosition(gamepad1.left_bumper ? wristPar : wristPerp);
+
 
 // CHANGE TO INTAKING
 
@@ -400,7 +402,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                     }
 
 //  LOWER ARM
-                    armTarget = (gamepad2.left_bumper) ? 150 : armTempTarget;
+                    armTarget = (gamepad2.left_bumper) ? 300 : armTempTarget;
 
 //  CHANGE TO REST
                     if (slideTarget <= 80){
@@ -421,13 +423,13 @@ public class TeleopTwoDriver extends LinearOpMode{
                     }
                     init = false;
 
+                    if (gamepad2.left_bumper){
+                        wrist.setPosition(wristOuttake);
+                    }
+
 //  ARM
                     armTarget = armTempTarget;
 
-//                  TODO: Change slide min (70 and 3650)
-                    maxWrist = (slideTarget-70)/3650 + wristPerp;
-//                    wrist.setPosition(maxWrist);
-                    wrist.setPosition(wristPerp);
                     break;
 
 /** HANG */

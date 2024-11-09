@@ -25,7 +25,7 @@ public class PIDTuning extends LinearOpMode {
 
     //    Arm PID
     public static PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    public static double armP = 0.0115, armI = 0, armD = 0.00004, armF = 0;
+    public static double armP = 0.2, armI = 0, armD = 0.002, armF = 0;
 //    armP is 0.025 when slide is out
     public static double armTarget = 0.0;
 
@@ -61,7 +61,7 @@ public class PIDTuning extends LinearOpMode {
             if (armTarget > 0 && armTarget < 3000) {
                 armMotor.setPower(armPIDF(armTarget, armMotor));
             }
-            if (slideTarget > 70 && slideTarget < 800) {
+            if (slideTarget > 70 && slideTarget < 7000) {
                 slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
             }
 
