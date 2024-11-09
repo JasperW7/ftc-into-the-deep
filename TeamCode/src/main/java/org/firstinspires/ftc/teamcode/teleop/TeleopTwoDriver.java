@@ -40,25 +40,25 @@ public class TeleopTwoDriver extends LinearOpMode{
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawL, clawR, hang;
 
-    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.7;
+    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.8;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
     public double armPar = 150, armUp = 2000;
-    public int slideInterval = 5;
+    public int slideInterval = 15;
     public double hangClosed = 0.5, hangOpen = 1;
 
 //  ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    double armP = 0.2, armI = 0, armD = 0.002, armF = 0;
+    double armP = 0.2, armI = 0, armD = 0.0017, armF = 0;
 //    extended PID
     double armPE = 0.2, armIE = 0, armDE = 0.002, armFE = 0;
     double armTarget = 0.0;
 
 //  SLIDES PID
-    public static PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    public static double slideP = 0.1, slideI = 0, slideD = 0.0013, slideF = 0;
-    public static double slidePE = 0.2, slideIE = 0, slideDE = 0, slideFE = 0;
-    public static double slideTarget = 0.0;
+    PIDFController slidePIDF = new PIDFController(0,0,0, 0);
+    double slideP = 0.1, slideI = 0, slideD = 0.0013, slideF = 0;
+    double slidePE = 0.2, slideIE = 0, slideDE = 0, slideFE = 0;
+    double slideTarget = 0.0;
 
     OpenCvCamera webcam = null;
     boolean sequence = false;
@@ -204,7 +204,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 
 //  ARM & SLIDE PID
 
-            // TODO: remove limits. ARM and SLIDE already has limits.
+
 //            armMotor.setPower((armTarget > 0 && armTarget < 700) ? armPIDF(armTarget, armMotor) : 0);
 //            slideMotor.setPower((slideTarget > 60 && slideTarget < 800) ? slidePIDF(slideTarget, slideMotor) : 0);
 
@@ -213,7 +213,7 @@ public class TeleopTwoDriver extends LinearOpMode{
             }else{
                 armMotor.setPower(0);
             }
-            if (slideTarget >= 60 && slideTarget <= slideMax) {
+            if (slideTarget >= 200 && slideTarget <= slideMax) {
                 slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
             }else{
                 slideMotor.setPower(0);
@@ -223,7 +223,7 @@ public class TeleopTwoDriver extends LinearOpMode{
             if (mode==Mode.INTAKING){
                 slideMax = 1400;
             }else{
-                slideMax = 2300;
+                slideMax = 2900;
             }
 
 
@@ -260,25 +260,25 @@ public class TeleopTwoDriver extends LinearOpMode{
                     retractSlide = true;
 
                 }else if (mode == Mode.REST){
-                    slideTarget = 100;
+                    slideTarget = 200;
                 }
             }
             xPress = false;
 
 //  SLIDES
         slideTarget += (gamepad2.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
-        slideTarget -= (gamepad2.dpad_down && slideTarget>60) ? slideInterval : 0;
-        slideTarget = Math.min(2300, Math.max(60, slideTarget));
+        slideTarget -= (gamepad2.dpad_down && slideTarget>200) ? slideInterval : 0;
+        slideTarget = Math.min(2900, Math.max(200, slideTarget));
 
         slideExtended = slideTarget > 300;
 
 //  ARM
-//            TODO: add limits for arm
+
         armTempTarget += (gamepad1.left_trigger > 0) ? 3 : 0;
         armTempTarget -= (gamepad1.right_trigger > 0) ? 3 : 0;
         armTempTarget = Math.min(2500, Math.max(0, armTempTarget));
 
-        armPar = (slideTarget > 300) ? 300 : 400;
+        armPar = (slideTarget > 300) ? 350 : 400;
 
 
 //  MODES
@@ -290,15 +290,15 @@ public class TeleopTwoDriver extends LinearOpMode{
                 init = true;
             } else if (mode == Mode.OUTTAKING) {
                 retractSlide=true;
-                slideInterval = 12;
+                slideInterval = 18;
             }
         }
         rightBumperPrevState = rightBumperCurrentState;
 
         if (retractSlide) {
-            if (slideTarget > 70) {
+            if (slideTarget > 200) {
                 retracted = false;
-                slideTarget -=6;
+                slideTarget -=15;
             } else {
                 retracted = true;
                 retractSlide = false;
@@ -331,7 +331,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                 case REST:
                     if (init) {
                         wrist.setPosition(wristPerp);
-                        slideTarget = 60;
+                        slideTarget = 200;
                         armTempTarget = armPar;
                         webcam.stopStreaming();
                         rotation.setPosition(0.5);
@@ -348,7 +348,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 // CHANGE TO INTAKING
 
 
-                    if (slideTarget > 70) {
+                    if (slideTarget > 300) {
                         retracted = false;
                         mode = Mode.INTAKING;
                         init = true;
@@ -361,7 +361,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                 case INTAKING:
                     if (init) {
                         wrist.setPosition(wristPar);
-//                        clawOpen = true;
+                        clawOpen = true;
                         cameraOn = false;
                         armTempTarget = armPar;
                     }
@@ -402,10 +402,10 @@ public class TeleopTwoDriver extends LinearOpMode{
                     }
 
 //  LOWER ARM
-                    armTarget = (gamepad2.left_bumper) ? 300 : armTempTarget;
+                    armTarget = (gamepad2.left_bumper) ? 225 : armTempTarget;
 
 //  CHANGE TO REST
-                    if (slideTarget <= 80){
+                    if (slideTarget <= 250){
                         mode = Mode.REST; //retract slide < 70; rest <= 80; intaking > 80
                     }
 
@@ -414,17 +414,19 @@ public class TeleopTwoDriver extends LinearOpMode{
 /** OUTTAKING */
                 case OUTTAKING:
                     if (init) {
-                        //TODO increase slide target
+
                         slideTarget = 100;
                         armTempTarget = armUp;
                         webcam.stopStreaming();
                         rotation.setPosition(0.5);
-                        wrist.setPosition(wristPerp);
+                        wrist.setPosition(wristPar);
                     }
                     init = false;
 
                     if (gamepad2.left_bumper){
                         wrist.setPosition(wristOuttake);
+                    }else{
+                        wrist.setPosition(wristPar);
                     }
 
 //  ARM
@@ -607,7 +609,11 @@ public class TeleopTwoDriver extends LinearOpMode{
     }
 
     public double slidePIDF(double target, DcMotorEx motor){
-        slidePIDF.setPIDF(slideP,slideI,slideD,slideF);
+        if (mode == mode.OUTTAKING){
+            slidePIDF.setPIDF(slidePE,slideIE,slideDE,slideFE);
+        }else {
+            slidePIDF.setPIDF(slideP, slideI, slideD, slideF);
+        }
         int currentPosition = motor.getCurrentPosition();
         double output = slidePIDF.calculate(currentPosition, target);
 
