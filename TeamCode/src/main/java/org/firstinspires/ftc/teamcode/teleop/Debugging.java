@@ -39,7 +39,7 @@ public class Debugging extends LinearOpMode{
 //     range = 0, 0.74
 //    parallel = 0
 //    perpendicular = 0.55
-    public double wristPar = 0.0, wristPerp = 0.55;
+    public static double wristPar = 0.0, wristPerp = 0.55;
     public double clawLOpen = 1.0, clawLClose = 0.6, clawROpen = 0.0, clawRClose = 0.4;
 
     //    DcMotorEx slidesMotor = null;
@@ -59,7 +59,7 @@ public class Debugging extends LinearOpMode{
     boolean cameraOn = false;
 
 
-//    public void initHardware() {
+    public void initHardware() {
 ////        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId","id",hardwareMap.appContext.getPackageName());
 ////        webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class,"Webcam 1"),cameraMonitorViewId);
 ////        FtcDashboard.getInstance().startCameraStream(webcam,0);
@@ -83,7 +83,7 @@ public class Debugging extends LinearOpMode{
 ////        br = hardwareMap.get(DcMotorEx.class,"backRightMotor");
 //
 ////        servoArm = hardwareMap.get(Servo.class,"Servo1");
-////        wrist = hardwareMap.get(Servo.class,"wrist");
+            wrist = hardwareMap.get(Servo.class,"wrist");
 ////        clawL = hardwareMap.get(Servo.class,"clawL");
 ////        clawR = hardwareMap.get(Servo.class,"clawR");
 //////        sl idesMotor = hardwareMap.get(DcMotorEx.class, "slidesMotor");
@@ -108,12 +108,12 @@ public class Debugging extends LinearOpMode{
 ////        armMotor.setPower(0);
 //
 //
-//    }
+    }
 
     @Override
     public void runOpMode() {
 
-//        initHardware();
+        initHardware();
         waitForStart();
 
 
@@ -150,7 +150,7 @@ public class Debugging extends LinearOpMode{
 //                armTarget -= 0.75;
 //            }
 //            telemetry.addData("arm",armTarget);
-
+            wrist.setPosition(wristPerp);
 
             // arm degree; todo - use settargetposition instead of setpower
 //            if (gamepad1.left_bumper){
@@ -168,23 +168,23 @@ public class Debugging extends LinearOpMode{
             //     range = 0, 0.74
             //    parallel = 0
             //    perpendicular = 0.55
-            if (gamepad1.dpad_down){
-                if (!dpad) {
-                    dpad = true;
-                    if (cameraOn){
-    //                    webcam.stopStreaming();
-                        cameraOn = false;
-
-                    }else{
-    //                    webcam.startStreaming(640,480,OpenCvCameraRotation.UPRIGHT);
-                        cameraOn = true;
-                    }
-                }
-            }
-            else {
-                dpad = false;
-            }
-            telemetry.addData("dpad",dpad);
+//            if (gamepad1.dpad_down){
+//                if (!dpad) {
+//                    dpad = true;
+//                    if (cameraOn){
+//    //                    webcam.stopStreaming();
+//                        cameraOn = false;
+//
+//                    }else{
+//    //                    webcam.startStreaming(640,480,OpenCvCameraRotation.UPRIGHT);
+//                        cameraOn = true;
+//                    }
+//                }
+//            }
+//            else {
+//                dpad = false;
+//            }
+//            telemetry.addData("dpad",dpad);
 //            if (gamepad1.x){
 //                wrist.setPosition(wristPar);
 //            } else if (gamepad1.y){
@@ -198,16 +198,18 @@ public class Debugging extends LinearOpMode{
 //                clawL.setPosition(clawLClose);
 //                clawR.setPosition(clawRClose);
 //            }
-            if (!cameraOn) {
-                if (rotationPos <= 1 && gamepad1.left_trigger > 0) {
-                    rotationPos += gamepad1.left_trigger / 100;
-                } else if (rotationPos >= 0 && gamepad1.right_trigger > 0) {
-                    rotationPos -= gamepad1.right_trigger / 100;
-                }
-            }
-            telemetry.addData("camera",cameraOn);
-            telemetry.addData("rotation",rotationPos);
+//            if (!cameraOn) {
+//                if (rotationPos <= 1 && gamepad1.left_trigger > 0) {
+//                    rotationPos += gamepad1.left_trigger / 100;
+//                } else if (rotationPos >= 0 && gamepad1.right_trigger > 0) {
+//                    rotationPos -= gamepad1.right_trigger / 100;
+//                }
+//            }
+//            telemetry.addData("camera",cameraOn);
+//            telemetry.addData("rotation",rotationPos);
 //            servoArm.setPosition(rotationPos);
+            telemetry.addData("wrist",wristPerp);
+            telemetry.addData("curr",wrist.getPosition());
             telemetry.update();
 
         }

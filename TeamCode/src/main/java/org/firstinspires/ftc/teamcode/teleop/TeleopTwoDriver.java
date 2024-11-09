@@ -74,6 +74,9 @@ public class TeleopTwoDriver extends LinearOpMode{
     boolean bumpers = false;
     boolean retractSlide = false;
     boolean retracted = true;
+    boolean xHold = false;
+    boolean xPress = false;
+
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double driver1Multiplier = 0.8;
@@ -204,18 +207,17 @@ public class TeleopTwoDriver extends LinearOpMode{
 //            armMotor.setPower((armTarget > 0 && armTarget < 700) ? armPIDF(armTarget, armMotor) : 0);
 //            slideMotor.setPower((slideTarget > 60 && slideTarget < 800) ? slidePIDF(slideTarget, slideMotor) : 0);
 
-            if (armTarget > 0 && armTarget < 2500) {
+            if (armTarget >= 0 && armTarget <= 2500) {
                 armMotor.setPower(armPIDF(armTarget, armMotor));
-            } else {
+            }else{
                 armMotor.setPower(0);
             }
-            if (slideTarget > 60 && slideTarget < slideMax) {
+            if (slideTarget >= 60 && slideTarget <= slideMax) {
                 slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
-            } else {
+            }else{
                 slideMotor.setPower(0);
             }
 
-//           TODO: make max slide target cap so it doesn't increase futrher. (rn slide doesn't move but target increases
 
             if (mode==Mode.INTAKING){
                 slideMax = 500;
@@ -242,9 +244,30 @@ public class TeleopTwoDriver extends LinearOpMode{
                 clawR.setPosition(clawROpen);
             }
 
+            if (gamepad2.x){
+                if (!xHold){
+                    xHold = true;
+                    xPress = !xPress;
+                }
+
+            }else{
+                xHold = false;
+            }
+
+            if (xPress){
+                if (mode == Mode.INTAKING) {
+                    retractSlide = true;
+
+                }else if (mode == Mode.REST){
+                    slideTarget = 100;
+                }
+            }
+            xPress = false;
+
 //  SLIDES
         slideTarget += (gamepad2.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
         slideTarget -= (gamepad2.dpad_down && slideTarget>60) ? slideInterval : 0;
+        slideTarget = Math.min(800, Math.max(60, slideTarget));
 
         slideExtended = slideTarget > 300;
 
@@ -252,18 +275,21 @@ public class TeleopTwoDriver extends LinearOpMode{
 //            TODO: add limits for arm
         armTempTarget += (gamepad1.left_trigger > 0) ? 3 : 0;
         armTempTarget -= (gamepad1.right_trigger > 0) ? 3 : 0;
-        armPar = (slideTarget > 300) ? 300 : 250;
+        armTempTarget = Math.min(2500, Math.max(0, armTempTarget));
+
+        armPar = (slideTarget > 300) ? 300 : 350;
+
 
 //  MODES
         boolean rightBumperCurrentState = gamepad1.right_bumper;
         if (rightBumperCurrentState && !rightBumperPrevState) {
             if (mode == Mode.REST) {
                 mode = Mode.OUTTAKING;
-                slideInterval = 8;
+                slideInterval = 24;
                 init = true;
             } else if (mode == Mode.OUTTAKING) {
                 retractSlide=true;
-                slideInterval = 4;
+                slideInterval = 12;
             }
         }
         rightBumperPrevState = rightBumperCurrentState;
@@ -271,7 +297,7 @@ public class TeleopTwoDriver extends LinearOpMode{
         if (retractSlide) {
             if (slideTarget > 70) {
                 retracted = false;
-                slideTarget -= 6;
+                slideTarget -=6;
             } else {
                 retracted = true;
                 retractSlide = false;
@@ -282,7 +308,9 @@ public class TeleopTwoDriver extends LinearOpMode{
         }
         telemetry.addData("retract",retractSlide);
 
+        if (gamepad2.x){
 
+        }
 
             boolean driver1yCurrentState = gamepad1.y;
             if (driver1yCurrentState && !driver1yPrevState) {
@@ -316,9 +344,7 @@ public class TeleopTwoDriver extends LinearOpMode{
                     wrist.setPosition(gamepad1.left_bumper ? wristPar : wristPerp);
 
 // CHANGE TO INTAKING
-                    if (gamepad2.x){
-                        slideTarget = 100;
-                    }
+
 
                     if (slideTarget > 70) {
                         retracted = false;
@@ -374,19 +400,13 @@ public class TeleopTwoDriver extends LinearOpMode{
                     }
 
 //  LOWER ARM
-                    armTarget = (gamepad2.left_bumper) ? 0 : armTempTarget;
+                    armTarget = (gamepad2.left_bumper) ? 150 : armTempTarget;
 
 //  CHANGE TO REST
                     if (slideTarget <= 80){
                         mode = Mode.REST; //retract slide < 70; rest <= 80; intaking > 80
                     }
 
-                    if (gamepad2.x){
-                        retractSlide = true;
-                        if (retracted) {
-                            mode = Mode.REST;
-                        }
-                    }
                     break;
 
 /** OUTTAKING */
@@ -406,8 +426,8 @@ public class TeleopTwoDriver extends LinearOpMode{
 
 //                  TODO: Change slide min (70 and 3650)
                     maxWrist = (slideTarget-70)/3650 + wristPerp;
-                    wrist.setPosition(maxWrist);
-
+//                    wrist.setPosition(maxWrist);
+                    wrist.setPosition(wristPerp);
                     break;
 
 /** HANG */
