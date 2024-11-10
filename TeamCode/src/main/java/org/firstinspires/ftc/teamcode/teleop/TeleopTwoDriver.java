@@ -623,7 +623,7 @@ public class TeleopTwoDriver extends LinearOpMode{
     }
 
     public double slidePIDF(double target, DcMotorEx motor){
-        if (mode == mode.OUTTAKING){
+        if (mode == Mode.OUTTAKING){
             slidePIDF.setPIDF(slidePE,slideIE,slideDE,slideFE);
         }else {
             slidePIDF.setPIDF(slideP, slideI, slideD, slideF);
