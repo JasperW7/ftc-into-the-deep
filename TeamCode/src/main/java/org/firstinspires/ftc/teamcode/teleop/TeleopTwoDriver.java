@@ -316,9 +316,6 @@ public class TeleopTwoDriver extends LinearOpMode{
 
         telemetry.addData("retract",retractSlide);
 
-        if (gamepad2.x){
-
-        }
 
             boolean driver1yCurrentState = gamepad1.y;
             if (driver1yCurrentState && !driver1yPrevState) {
