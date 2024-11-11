@@ -194,6 +194,7 @@ public class TeleopOneDriver extends LinearOpMode{
                 br.setPower(backRightPower);
             }else{
                 //TODO trig calculation for rotation
+                rotation.setPosition(Math.atan(y/x)/Math.PI);
             }
 //  ARM & SLIDE PID
 
