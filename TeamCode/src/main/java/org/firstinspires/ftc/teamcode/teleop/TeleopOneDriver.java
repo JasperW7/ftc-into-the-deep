@@ -365,8 +365,9 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
 //  ROTATION
-                    boolean cameraCurr = gamepad1.left_stick_button;
+                    boolean cameraCurr = gamepad1.x;
                     if (cameraCurr && !cameraPrev){
+                        cameraOn = !cameraOn;
                         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
                             @Override
                             public void onOpened() {
