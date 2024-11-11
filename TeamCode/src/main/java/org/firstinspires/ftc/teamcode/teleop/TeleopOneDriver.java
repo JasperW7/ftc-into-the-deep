@@ -174,23 +174,27 @@ public class TeleopOneDriver extends LinearOpMode{
         while (!isStopRequested()) {
             dashboardTelemetry.addData("status","running");
 //  DRIVE
+
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x * 1.1;
             double rx = gamepad1.right_stick_x;
 
             double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
 
-            double driverMultiplier = micro ? 1 : 0.25;
-            frontLeftPower = (y + x + rx) / denom * driverMultiplier;
-            backLeftPower = (y - x + rx) / denom * driverMultiplier;
-            frontRightPower = (y - x - rx) / denom * driverMultiplier;
-            backRightPower = (y + x - rx) / denom * driverMultiplier;
+            if (!micro) {
 
-            fl.setPower(frontLeftPower);
-            fr.setPower(frontRightPower);
-            bl.setPower(backLeftPower);
-            br.setPower(backRightPower);
+                frontLeftPower = (y + x + rx) / denom;
+                backLeftPower = (y - x + rx) / denom;
+                frontRightPower = (y - x - rx) / denom;
+                backRightPower = (y + x - rx) / denom;
 
+                fl.setPower(frontLeftPower);
+                fr.setPower(frontRightPower);
+                bl.setPower(backLeftPower);
+                br.setPower(backRightPower);
+            }else{
+                //TODO trig calculation for rotation
+            }
 //  ARM & SLIDE PID
 
 
@@ -234,30 +238,6 @@ public class TeleopOneDriver extends LinearOpMode{
                 clawR.setPosition(clawROpen);
             }
 
-            if (gamepad1.x){
-                if (!xHold){
-                    xHold = true;
-                    xPress = !xPress;
-                }
-
-            }else{
-                xHold = false;
-            }
-
-            if (xPress){
-                if (mode == Mode.INTAKING) {
-                    micro = false;
-                    armTempTarget = 400;
-                    wrist.setPosition(wristPerp);
-                    armTarget = armTempTarget;
-                    retractSlide = true;
-
-                }else if (mode == Mode.REST){
-                    slideTarget = 200;
-                }
-            }
-            xPress = false;
-
 //  SLIDES
             slideTarget += (gamepad1.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
             slideTarget -= (gamepad1.dpad_down && slideTarget>500) ? slideInterval : 0;
@@ -284,6 +264,12 @@ public class TeleopOneDriver extends LinearOpMode{
                 } else if (mode == Mode.OUTTAKING) {
                     retractSlide=true;
                     slideInterval = 18;
+                } else if (mode == Mode.INTAKING){
+                    micro = false;
+                    armTempTarget = 400;
+                    wrist.setPosition(wristPerp);
+                    armTarget = armTempTarget;
+                    retractSlide = true;
                 }
             }
             rightBumperPrevState = rightBumperCurrentState;
@@ -365,8 +351,9 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
 //  ROTATION
-                    boolean cameraCurr = gamepad1.left_stick_button;
+                    boolean cameraCurr = gamepad1.x;
                     if (cameraCurr && !cameraPrev){
+                        cameraOn = !cameraOn;
                         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
                             @Override
                             public void onOpened() {
