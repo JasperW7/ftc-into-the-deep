@@ -369,18 +369,19 @@ public class TeleopOneDriver extends LinearOpMode{
                         });
                     }
                     cameraPrev = cameraCurr;
-
-                    if (!cameraOn) {
-                        if (gamepad1.y && rotationPos < 1) {
-                            rotationPos += 0.5;
-                            if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
-                        }
-                        if (gamepad1.b && rotationPos > 0) {
-                            rotationPos -= 0.5;
-                            if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
-                        }
-                        rotation.setPosition(rotationPos);
-                    }
+                    //TODO: remove?
+//
+//                    if (!cameraOn) {
+//                        if (gamepad1.y && rotationPos < 1) {
+//                            rotationPos += 0.5;
+//                            if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
+//                        }
+//                        if (gamepad1.b && rotationPos > 0) {
+//                            rotationPos -= 0.5;
+//                            if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
+//                        }
+//                        rotation.setPosition(rotationPos);
+//                    }
 
 //  LOWER ARM
                     armTarget = (gamepad1.left_bumper) ? 150 : armTempTarget;
