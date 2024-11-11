@@ -45,7 +45,7 @@ public class TeleopOneDriver extends LinearOpMode{
     public double rotationPos = 0.5;
     public double armPar = 150, armUp = 2000;
     public int slideInterval = 15;
-    public double hangClosed = 0.5, hangOpen = 1;
+    public double hangClosed = 0.3, hangOpen = 1;
 
     //  ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
@@ -194,7 +194,9 @@ public class TeleopOneDriver extends LinearOpMode{
                 br.setPower(backRightPower);
             }else{
                 //TODO trig calculation for rotation
-                rotation.setPosition(Math.atan(y/x)/Math.PI);
+                if (x!= 0) {
+                    rotation.setPosition(1-(Math.acos(x/(Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5))) / Math.PI));
+                }
             }
 //  ARM & SLIDE PID
 
