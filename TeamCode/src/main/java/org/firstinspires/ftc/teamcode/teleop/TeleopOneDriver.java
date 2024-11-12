@@ -3,17 +3,20 @@ package org.firstinspires.ftc.teamcode.teleop;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 
 import org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.VisionTesting;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -39,6 +42,7 @@ public class TeleopOneDriver extends LinearOpMode{
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawL, clawR, hang;
+    IMU imu;
 
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.8;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
@@ -120,7 +124,13 @@ public class TeleopOneDriver extends LinearOpMode{
         br = hardwareMap.get(DcMotorEx.class,"backRightMotor");
         hangL = hardwareMap.get(DcMotorEx.class,"hangL");
         hangR = hardwareMap.get(DcMotorEx.class,"hangR");
+        imu = hardwareMap.get(IMU.class,"imu");
 
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
+        ));
+        imu.initialize(parameters);
         rotation = hardwareMap.get(Servo.class,"rotation");
         wrist = hardwareMap.get(Servo.class,"wrist");
         clawL = hardwareMap.get(Servo.class,"clawL");
@@ -179,14 +189,20 @@ public class TeleopOneDriver extends LinearOpMode{
             double x = gamepad1.left_stick_x * 1.1;
             double rx = gamepad1.right_stick_x;
 
-            double denom = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-
             if (!micro) {
+                if (gamepad1.options){
+                    imu.resetYaw();
+                }
+                double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-                frontLeftPower = (y + x + rx) / denom;
-                backLeftPower = (y - x + rx) / denom;
-                frontRightPower = (y - x - rx) / denom;
-                backRightPower = (y + x - rx) / denom;
+                double rotX = x*Math.cos(-botHeading) - y*Math.sin(-botHeading);
+                double rotY = x*Math.sin(-botHeading) + y*Math.cos(-botHeading);
+
+                double denom = Math.max(Math.abs(rotX) + Math.abs(rotY) + Math.abs(rx),1);
+                frontLeftPower = (rotY + rotX + rx) / denom;
+                backLeftPower = (rotY - rotX + rx) / denom;
+                frontRightPower = (rotY - rotX - rx) / denom;
+                backRightPower = (rotY + rotX - rx) / denom;
 
                 fl.setPower(frontLeftPower);
                 fr.setPower(frontRightPower);
@@ -195,7 +211,11 @@ public class TeleopOneDriver extends LinearOpMode{
             }else{
                 //TODO trig calculation for rotation
                 if (x!= 0) {
-                    rotation.setPosition(1-(Math.acos(x/(Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5))) / Math.PI));
+                    if (y>=0) {
+                        rotation.setPosition(1 - (Math.acos(x / (Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5))) / Math.PI));
+                    }else{
+                        rotation.setPosition()
+                    }
                 }
             }
 //  ARM & SLIDE PID
