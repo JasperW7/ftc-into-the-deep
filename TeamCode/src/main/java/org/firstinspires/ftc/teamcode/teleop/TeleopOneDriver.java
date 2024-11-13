@@ -53,15 +53,15 @@ public class TeleopOneDriver extends LinearOpMode{
 
     //  ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    double armP = 0.2, armI = 0, armD = 0.0017, armF = 0;
+    double armP = 0.08, armI = 0, armD = 0.002, armF = 0;
     //    extended PID
-    double armPE = 0.2, armIE = 0, armDE = 0.002, armFE = 0;
+    double armPE = 0.08, armIE = 0, armDE = 0.004, armFE = 0;
     double armTarget = 0.0;
 
     //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    double slideP = 0.1, slideI = 0, slideD = 0.0013, slideF = 0;
-    double slidePE = 0.2, slideIE = 0, slideDE = 0, slideFE = 0;
+    double slideP = 0.093, slideI = 0, slideD = 0.002, slideF = 0;
+    double slidePE = 0.096, slideIE = 0, slideDE = 0.0015, slideFE = 0;
     double slideTarget = 0.0;
 
     OpenCvCamera webcam = null;
@@ -210,11 +210,19 @@ public class TeleopOneDriver extends LinearOpMode{
                 br.setPower(backRightPower);
             }else{
                 //TODO trig calculation for rotation
+
+                frontLeftPower = rx/5;
+                backLeftPower = rx/5;
+                frontRightPower = -rx/5;
+                backRightPower = -rx/5;
+
+                fl.setPower(frontLeftPower);
+                fr.setPower(frontRightPower);
+                bl.setPower(backLeftPower);
+                br.setPower(backRightPower);
                 if (x!= 0) {
                     if (y>=0) {
                         rotation.setPosition(1 - (Math.acos(x / (Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5))) / Math.PI));
-                    }else{
-                        rotation.setPosition()
                     }
                 }
             }
@@ -314,7 +322,7 @@ public class TeleopOneDriver extends LinearOpMode{
             telemetry.addData("retract",retractSlide);
 
 
-            boolean driver1yCurrentState = gamepad1.y;
+            boolean driver1yCurrentState = gamepad1.left_stick_button;
             if (driver1yCurrentState && !driver1yPrevState) {
                 if (mode == Mode.REST) {
                     mode = Mode.HANG;
