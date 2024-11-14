@@ -220,11 +220,21 @@ public class TeleopOneDriver extends LinearOpMode{
                 fr.setPower(frontRightPower);
                 bl.setPower(backLeftPower);
                 br.setPower(backRightPower);
-                if (x!= 0) {
-                    if (y>=0) {
-                        rotation.setPosition(1 - (Math.acos(x / (Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5))) / Math.PI));
-                    }
+//                if (x!= 0) {
+//                    if (y>=0) {
+//                        rotation.setPosition(1 - (Math.acos(x / (Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5))) / Math.PI));
+//                    }
+//                }
+                slideTarget += y;
+                if (gamepad2.left_trigger > 0 && rotationPos < 1) {
+                    rotationPos += gamepad2.left_trigger / 20;
+                    if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
                 }
+                if (gamepad2.right_trigger > 0 && rotationPos > 0) {
+                    rotationPos -= gamepad2.right_trigger / 20;
+                    if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
+                }
+                rotation.setPosition(rotationPos);
             }
 //  ARM & SLIDE PID
 
@@ -278,8 +288,8 @@ public class TeleopOneDriver extends LinearOpMode{
 
 //  ARM
 
-            armTempTarget += (gamepad1.left_trigger > 0) ? 3 : 0;
-            armTempTarget -= (gamepad1.right_trigger > 0) ? 3 : 0;
+            armTempTarget += (gamepad1.left_trigger > 0 && !micro) ? 3 : 0;
+            armTempTarget -= (gamepad1.right_trigger > 0 && !micro) ? 3 : 0;
             armTempTarget = Math.min(2500, Math.max(0, armTempTarget));
 
             armPar = (slideTarget > 300) ? 350 : 400;
