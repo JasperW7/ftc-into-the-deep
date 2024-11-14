@@ -225,7 +225,8 @@ public class TeleopOneDriver extends LinearOpMode{
 //                        rotation.setPosition(1 - (Math.acos(x / (Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5))) / Math.PI));
 //                    }
 //                }
-                slideTarget += y;
+                slideTarget += (y>0 && slideTarget<slideMax) ? slideInterval*y/3:0;
+                slideTarget += (y<0 && slideTarget>500) ? slideInterval*y/3:0;
                 if (gamepad2.left_trigger > 0 && rotationPos < 1) {
                     rotationPos += gamepad2.left_trigger / 20;
                     if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
@@ -254,7 +255,7 @@ public class TeleopOneDriver extends LinearOpMode{
             }
 
 
-            if (mode==Mode.INTAKING){
+            if (mode==Mode.INTAKING || micro){
                 slideMax = 1800;
             }else{
                 slideMax = 2800;
