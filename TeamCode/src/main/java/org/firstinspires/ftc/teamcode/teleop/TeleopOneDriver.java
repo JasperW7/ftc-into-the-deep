@@ -42,7 +42,6 @@ public class TeleopOneDriver extends LinearOpMode{
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawL, clawR, hang;
-    IMU imu;
 
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.8;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
@@ -124,13 +123,12 @@ public class TeleopOneDriver extends LinearOpMode{
         br = hardwareMap.get(DcMotorEx.class,"backRightMotor");
         hangL = hardwareMap.get(DcMotorEx.class,"hangL");
         hangR = hardwareMap.get(DcMotorEx.class,"hangR");
-        imu = hardwareMap.get(IMU.class,"imu");
+
 
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
         ));
-        imu.initialize(parameters);
         rotation = hardwareMap.get(Servo.class,"rotation");
         wrist = hardwareMap.get(Servo.class,"wrist");
         clawL = hardwareMap.get(Servo.class,"clawL");
@@ -190,19 +188,12 @@ public class TeleopOneDriver extends LinearOpMode{
             double rx = gamepad1.right_stick_x;
 
             if (!micro) {
-                if (gamepad1.options){
-                    imu.resetYaw();
-                }
-                double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-                double rotX = x*Math.cos(-botHeading) - y*Math.sin(-botHeading);
-                double rotY = x*Math.sin(-botHeading) + y*Math.cos(-botHeading);
-
-                double denom = Math.max(Math.abs(rotX) + Math.abs(rotY) + Math.abs(rx),1);
-                frontLeftPower = (rotY + rotX + rx) / denom;
-                backLeftPower = (rotY - rotX + rx) / denom;
-                frontRightPower = (rotY - rotX - rx) / denom;
-                backRightPower = (rotY + rotX - rx) / denom;
+                double denom = Math.max(Math.abs(x) + Math.abs(y) + Math.abs(rx),1);
+                frontLeftPower = (y + x + rx) / denom;
+                backLeftPower = (y - x + rx) / denom;
+                frontRightPower = (y - x - rx) / denom;
+                backRightPower = (y + x - rx) / denom;
 
                 fl.setPower(frontLeftPower);
                 fr.setPower(frontRightPower);
@@ -352,6 +343,7 @@ public class TeleopOneDriver extends LinearOpMode{
 /** REST */
                 case REST:
                     if (init) {
+                        cameraOn = false;
                         webcam.stopStreaming();
                         wrist.setPosition(wristPerp);
                         slideTarget = 200;
