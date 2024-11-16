@@ -13,27 +13,9 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 
-import org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.VisionTesting;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @Config
 @TeleOp
@@ -63,11 +45,9 @@ public class TeleopOneDriver extends LinearOpMode{
     double slidePE = 0.093, slideIE = 0, slideDE = 0.003, slideFE = 0;
     double slideTarget = 0.0;
 
-    OpenCvCamera webcam = null;
     boolean leftBumperPrevState = false;
     boolean rightBumperPrevState = false;
-    boolean driver1yPrevState = false;
-    boolean cameraOn = false;
+    boolean hangPrev = false;
     boolean claw = false;
     boolean clawOpen = false;
     boolean init = true;
@@ -78,7 +58,6 @@ public class TeleopOneDriver extends LinearOpMode{
     boolean xPress = false;
     boolean slideOuttake = false;
     boolean micro = false;
-    boolean cameraPrev = false;
     boolean intakePrev = false;
 
 
@@ -96,24 +75,6 @@ public class TeleopOneDriver extends LinearOpMode{
     Mode mode = Mode.REST;
 
 
-    public void initCamera() {
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId","id",hardwareMap.appContext.getPackageName());
-        webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class,"Webcam 1"),cameraMonitorViewId);
-        FtcDashboard.getInstance().startCameraStream(webcam,0);
-        webcam.setPipeline(new pipeLine());
-        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener(){
-            @Override
-            public void onOpened(){
-                webcam.startStreaming(640,480, OpenCvCameraRotation.UPSIDE_DOWN);
-                cameraOn = true;
-            }
-
-            @Override
-            public void onError(int errorCode){
-
-            }
-        });
-    }
 
     public void initHardware() {
         armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
@@ -126,10 +87,6 @@ public class TeleopOneDriver extends LinearOpMode{
         hangR = hardwareMap.get(DcMotorEx.class,"hangR");
 
 
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
-        ));
         rotation = hardwareMap.get(Servo.class,"rotation");
         wrist = hardwareMap.get(Servo.class,"wrist");
         clawL = hardwareMap.get(Servo.class,"clawL");
@@ -177,7 +134,7 @@ public class TeleopOneDriver extends LinearOpMode{
     public void runOpMode() {
         initHardware();
         waitForStart();
-        initCamera();
+
 
 
         while (!isStopRequested()) {
@@ -325,8 +282,8 @@ public class TeleopOneDriver extends LinearOpMode{
             telemetry.addData("retract",retractSlide);
 
 
-            boolean driver1yCurrentState = gamepad1.left_stick_button;
-            if (driver1yCurrentState && !driver1yPrevState) {
+            boolean hangCurr = gamepad1.left_stick_button;
+            if (hangCurr && !hangPrev) {
                 if (mode == Mode.REST) {
                     mode = Mode.HANG;
                 } else if (mode == Mode.HANG) {
@@ -334,7 +291,7 @@ public class TeleopOneDriver extends LinearOpMode{
                 }
                 init = true;
             }
-            driver1yPrevState = driver1yCurrentState;
+            hangPrev = hangCurr;
 
 
             telemetry.addData("mode type",mode);
@@ -342,12 +299,9 @@ public class TeleopOneDriver extends LinearOpMode{
 /** REST */
                 case REST:
                     if (init) {
-                        cameraOn = false;
-                        webcam.stopStreaming();
                         wrist.setPosition(wristPerp);
                         slideTarget = 200;
                         armTempTarget = armPar;
-                        webcam.stopStreaming();
                         rotation.setPosition(0.5);
                         hang.setPosition(hangClosed);
                     }
@@ -355,9 +309,6 @@ public class TeleopOneDriver extends LinearOpMode{
 
 // ARM POSITION
                     armTarget = armTempTarget;
-
-// WRIST POSITION
-
 
 // CHANGE TO INTAKING
                     boolean intakeCurr = gamepad1.left_bumper;
@@ -375,45 +326,10 @@ public class TeleopOneDriver extends LinearOpMode{
                     if (init) {
                         wrist.setPosition(wristPar);
                         clawOpen = true;
-                        cameraOn = false;
                         armTempTarget = armPar;
                     }
                     init = false;
 
-
-
-//  ROTATION
-                    boolean cameraCurr = gamepad1.x;
-                    if (cameraCurr && !cameraPrev){
-                        cameraOn = !cameraOn;
-                        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-                            @Override
-                            public void onOpened() {
-                                if (cameraOn) {
-                                    webcam.startStreaming(640, 480, OpenCvCameraRotation.UPSIDE_DOWN);
-                                    FtcDashboard.getInstance().startCameraStream(webcam,0);
-                                } else {
-                                    webcam.stopStreaming();
-                                }
-                            }
-                            @Override
-                            public void onError(int errorCode) {}
-                        });
-                    }
-                    cameraPrev = cameraCurr;
-                    //TODO: remove?
-//
-//                    if (!cameraOn) {
-//                        if (gamepad1.y && rotationPos < 1) {
-//                            rotationPos += 0.5;
-//                            if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
-//                        }
-//                        if (gamepad1.b && rotationPos > 0) {
-//                            rotationPos -= 0.5;
-//                            if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
-//                        }
-//                        rotation.setPosition(rotationPos);
-//                    }
 
 //  LOWER ARM
                     armTarget = (gamepad1.left_bumper) ? 150 : armTempTarget;
@@ -430,7 +346,6 @@ public class TeleopOneDriver extends LinearOpMode{
                     if (init) {
                         armTempTarget = 2000;
                         slideOuttake = true;
-                        webcam.stopStreaming();
                         rotation.setPosition(0.5);
                         wrist.setPosition(wristPar);
 
@@ -494,123 +409,11 @@ public class TeleopOneDriver extends LinearOpMode{
             dashboardTelemetry.addData("slide current",slideMotor.getCurrentPosition());
             dashboardTelemetry.addData("slide target",slideTarget);
 
-            telemetry.addData("camera",cameraOn);
             telemetry.addData("rotation",rotationPos);
             telemetry.addData("init",init);
 
             telemetry.update();
             dashboardTelemetry.update();
-
-        }
-    }
-
-    public class pipeLine extends OpenCvPipeline {
-        Mat hsv = new Mat();
-        Mat mask = new Mat();
-        Mat hierarchy = new Mat();
-        List<MatOfPoint> contours = new ArrayList<>();
-
-        @Override
-        public Mat processFrame(Mat input) {
-            // Convert the input image to HSV
-            Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
-
-            // Define the range for blue color in HSV
-            Scalar lowerBlue = new Scalar(100, 150, 50); // lower bound of blue
-            Scalar upperBlue = new Scalar(140, 255, 255); // upper bound of blue
-
-            /* HSV FOR REFERENCE
-            RED:
-            lower bound = (0,100,100), upper bound = (10,255,255)
-            lower bound = (160,100,100), upper bound = (180,255,255)
-
-            YELLOW:
-            lower bound = (20,100,100), upper bound = (30,255,255)
-
-            BLUE:
-            lower bound = (100,150,50), upper bound = (140,255,255)
-             */
-
-            // Threshold the HSV image to get only blue colors
-            Core.inRange(hsv, lowerBlue, upperBlue, mask);
-
-            // find contours in image
-            contours.clear();
-            Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
-            // finding quadrilaterals
-            for (MatOfPoint contour : contours) {
-                if (Imgproc.contourArea(contour)<500){
-                    continue;
-                }
-                MatOfPoint2f contour2f = new MatOfPoint2f(contour.toArray());
-
-                // approximate shape of contour lines
-                MatOfPoint2f approxCurve = new MatOfPoint2f();
-                double epsilon = 0.02 * Imgproc.arcLength(contour2f, true);
-                Imgproc.approxPolyDP(contour2f, approxCurve, epsilon, true);
-
-                if (approxCurve.total() == 4) { // quadrilateral found
-                    // Convert the approximation back to MatOfPoint for drawing
-                    MatOfPoint points = new MatOfPoint(approxCurve.toArray());
-
-                    // draw shape onto webcam image
-                    Imgproc.drawContours(input, Collections.singletonList(points), -1, new Scalar(0, 255, 0), 2);
-
-                    double orientationtan = findOrientation(approxCurve.toArray());
-                    telemetry.addData("orientationtan", orientationtan);
-                    double servoDegree;
-                    if (orientationtan>=90){
-                        servoDegree = (orientationtan+90)/180;
-                    }
-                    else{
-                        servoDegree = (orientationtan-90)/180;
-                    }
-                    telemetry.addData("servodegree",servoDegree);
-                    if (cameraOn) {
-                        rotation.setPosition((servoDegree));
-                    }
-                }
-            }
-
-            telemetry.update();
-
-            return input;
-        }
-
-        private double findOrientation(Point[] points) {
-
-            boolean shortest = false; //false for d1/d3 shortest, true for d2/d4 shortest
-            //distances from each quadrilateral
-            double d1 = Math.pow(Math.pow(points[0].x - points[1].x, 2) + Math.pow(points[0].y - points[1].y, 2), 0.5);
-            double d2 = Math.pow(Math.pow(points[1].x - points[2].x, 2) + Math.pow(points[1].y - points[2].y, 2), 0.5);
-            double d3 = Math.pow(Math.pow(points[2].x - points[3].x, 2) + Math.pow(points[2].y - points[3].y, 2), 0.5);
-            double d4 = Math.pow(Math.pow(points[0].x - points[3].x, 2) + Math.pow(points[0].y - points[3].y, 2), 0.5);
-            //find shortest
-            if (d1 >= d2 && d3 >= d4) {
-                shortest = true;
-            }
-            Point midBottom;
-            Point midTop;
-            //find shortest by comparing any two adjacent sides
-            if (shortest) {
-                midTop = new Point((points[0].x + points[3].x) / 2, (points[0].y + points[3].y) / 2);
-                midBottom = new Point((points[1].x + points[2].x) / 2, (points[1].y + points[2].y) / 2);
-
-            } else {
-                midTop = new Point((points[0].x + points[1].x) / 2, (points[0].y + points[1].y) / 2);
-                midBottom = new Point((points[2].x + points[3].x) / 2, (points[2].y + points[3].y) / 2);
-            }
-            //distances of x,y values between shortest sides
-            double dx = midBottom.x - midTop.x;
-            double dy = midBottom.y - midTop.y;
-            //trig to calculate degree
-            double orientation = Math.atan2(dy,dx) * (180.0/ Math.PI);
-            //if angle is negative
-            if (orientation<0){
-                orientation += 360;
-            }
-            return 180-orientation;
 
         }
     }
