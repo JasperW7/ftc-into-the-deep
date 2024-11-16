@@ -52,15 +52,15 @@ public class TeleopOneDriver extends LinearOpMode{
 
     //  ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    double armP = 0.08, armI = 0, armD = 0.002, armF = 0;
+    double armP = 0.2, armI = 0, armD = 0.002, armF = 0;
     //    extended PID
-    double armPE = 0.08, armIE = 0, armDE = 0.004, armFE = 0;
+    double armPE = 0.2, armIE = 0, armDE = 0.002, armFE = 0;
     double armTarget = 0.0;
 
     //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    double slideP = 0.093, slideI = 0, slideD = 0.002, slideF = 0;
-    double slidePE = 0.096, slideIE = 0, slideDE = 0.0015, slideFE = 0;
+    double slideP = 0.093, slideI = 0, slideD = 0.003, slideF = 0;
+    double slidePE = 0.093, slideIE = 0, slideDE = 0.003, slideFE = 0;
     double slideTarget = 0.0;
 
     OpenCvCamera webcam = null;
@@ -84,7 +84,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
-    double slideMax = 1800;
+    double slideMax = 2500;
 
     public enum Mode {
         REST,
@@ -202,10 +202,10 @@ public class TeleopOneDriver extends LinearOpMode{
             }else{
                 //TODO trig calculation for rotation
 
-                frontLeftPower = rx/5;
-                backLeftPower = rx/5;
-                frontRightPower = -rx/5;
-                backRightPower = -rx/5;
+                frontLeftPower = rx/3;
+                backLeftPower = rx/3;
+                frontRightPower = -rx/3;
+                backRightPower = -rx/3;
 
                 fl.setPower(frontLeftPower);
                 fr.setPower(frontRightPower);
@@ -216,14 +216,14 @@ public class TeleopOneDriver extends LinearOpMode{
 //                        rotation.setPosition(1 - (Math.acos(x / (Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5))) / Math.PI));
 //                    }
 //                }
-                slideTarget += (y>0 && slideTarget<slideMax) ? slideInterval*y/3:0;
-                slideTarget += (y<0 && slideTarget>500) ? slideInterval*y/3:0;
-                if (gamepad2.left_trigger > 0 && rotationPos < 1) {
-                    rotationPos += gamepad2.left_trigger / 20;
+                slideTarget += (y>0 && slideTarget<slideMax) ? slideInterval*y/1.5:0;
+                slideTarget += (y<0 && slideTarget>500) ? slideInterval*y/1.5:0;
+                if (gamepad1.left_trigger > 0 && rotationPos < 1) {
+                    rotationPos += gamepad1.left_trigger / 20;
                     if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
                 }
-                if (gamepad2.right_trigger > 0 && rotationPos > 0) {
-                    rotationPos -= gamepad2.right_trigger / 20;
+                if (gamepad1.right_trigger > 0 && rotationPos > 0) {
+                    rotationPos -= gamepad1.right_trigger / 20;
                     if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
                 }
                 rotation.setPosition(rotationPos);
@@ -247,7 +247,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
             if (mode==Mode.INTAKING || micro){
-                slideMax = 1800;
+                slideMax = 2500;
             }else{
                 slideMax = 2800;
             }

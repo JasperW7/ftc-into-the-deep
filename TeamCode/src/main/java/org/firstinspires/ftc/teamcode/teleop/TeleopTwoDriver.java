@@ -47,17 +47,17 @@ public class TeleopTwoDriver extends LinearOpMode{
     public int slideInterval = 15;
     public double hangClosed = 0.5, hangOpen = 1;
 
-//  ARM PID
+    // ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    double armP = 0.08, armI = 0, armD = 0.0025, armF = 0;
-//    extended PID
-    double armPE = 0.08, armIE = 0, armDE = 0.004, armFE = 0;
+    double armP = 0.2, armI = 0, armD = 0.002, armF = 0;
+    //    extended PID
+    double armPE = 0.2, armIE = 0, armDE = 0.002, armFE = 0;
     double armTarget = 0.0;
 
-//  SLIDES PID
+    //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    double slideP = 0.093, slideI = 0, slideD = 0.002, slideF = 0;
-    double slidePE = 0.096, slideIE = 0, slideDE = 0.0015, slideFE = 0;
+    double slideP = 0.093, slideI = 0, slideD = 0.003, slideF = 0;
+    double slidePE = 0.093, slideIE = 0, slideDE = 0.003, slideFE = 0;
     double slideTarget = 0.0;
 
     OpenCvCamera webcam = null;
