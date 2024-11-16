@@ -79,6 +79,7 @@ public class TeleopOneDriver extends LinearOpMode{
     boolean slideOuttake = false;
     boolean micro = false;
     boolean cameraPrev = false;
+    boolean intakePrev = false;
 
 
 
@@ -330,8 +331,6 @@ public class TeleopOneDriver extends LinearOpMode{
                     mode = Mode.HANG;
                 } else if (mode == Mode.HANG) {
                     mode = Mode.REST;
-                } else if (mode == Mode.INTAKING){
-                    micro = true;
                 }
                 init = true;
             }
@@ -361,14 +360,13 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
 // CHANGE TO INTAKING
-
-
-                    if (slideTarget > 300) {
-                        retracted = false;
+                    boolean intakeCurr = gamepad1.left_bumper;
+                    if (intakeCurr && !intakePrev){
+                        micro = true;
+                        slideTarget = 1500;
                         mode = Mode.INTAKING;
-                        init = true;
                     }
-
+                    intakePrev = intakeCurr;
 
                     break;
 
