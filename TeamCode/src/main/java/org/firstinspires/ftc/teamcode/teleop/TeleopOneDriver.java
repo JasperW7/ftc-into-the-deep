@@ -190,7 +190,8 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
 //            armMotor.setPower((armTarget > 0 && armTarget < 700) ? armPIDF(armTarget, armMotor) : 0);
-//            slideMotor.setPower((slideTarget > 60 && slideTarget < 800) ? slidePIDF(slideTarget, slideMotor) : 0);
+//            slideMotor.setPower((slideTarget > 60 && s
+//            lideTarget < 800) ? slidePIDF(slideTarget, slideMotor) : 0);
 
             if (armTarget >= 0 && armTarget <= 2500) {
                 armMotor.setPower(armPIDF(armTarget, armMotor));
@@ -316,6 +317,7 @@ public class TeleopOneDriver extends LinearOpMode{
                         micro = true;
                         slideTarget = 1500;
                         mode = Mode.INTAKING;
+                        init = true;
                     }
                     intakePrev = intakeCurr;
 
