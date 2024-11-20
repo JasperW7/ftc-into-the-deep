@@ -9,7 +9,7 @@ import org.rowlandhall.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
     public static void main(String[] args) {
-        MeepMeep meepMeep = new MeepMeep(500);
+        MeepMeep meepMeep = new MeepMeep(800);
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
@@ -41,20 +41,20 @@ public class MeepMeepTesting {
 
                         .strafeLeft(38) //to first sample
                         .setReversed(true)
-                        .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(45))// high basket 1
+                        .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(270))// high basket 1
                         .setReversed(false)
 
                         .splineToLinearHeading(new Pose2d(-57,-38,Math.toRadians(90)),Math.toRadians(90)) //to second sample
                         .setReversed(true)
-                        .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(45))// high basket 2
+                        .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(270))// high basket 2
                         .setReversed(false)
 
                         .splineToLinearHeading(new Pose2d(-55,-24,Math.toRadians(180)),Math.toRadians(180)) // to third sample
                         .setReversed(true)
-                        .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(45))// high basket 3
+                        .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(270))// high basket 3
                         .setReversed(false)
 
-                        .splineToLinearHeading(new Pose2d(-26,-10,Math.toRadians(0)),Math.toRadians(0)) //park
+                        .splineToLinearHeading(new Pose2d(-26,-10,Math.toRadians(180)),Math.toRadians(0)) //park
 
 
 
