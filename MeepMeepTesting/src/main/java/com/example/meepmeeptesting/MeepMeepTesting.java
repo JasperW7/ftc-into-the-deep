@@ -9,7 +9,7 @@ import org.rowlandhall.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
     public static void main(String[] args) {
-        MeepMeep meepMeep = new MeepMeep(600);
+        MeepMeep meepMeep = new MeepMeep(500);
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
@@ -37,7 +37,13 @@ public class MeepMeepTesting {
 //                        .turn(Math.toRadians(-45))
 //                        .strafeRight(2)//high basket
 
-                        .splineTo(new Vector2d(-10,-20),Math.toRadians(90))
+                        .splineToConstantHeading(new Vector2d(-10,-38),0) //to high rung
+                        .strafeLeft(38) //to first sample
+                        .splineTo(new Vector2d(-50,-50),Math.toRadians(135))
+
+
+
+
 
 
 

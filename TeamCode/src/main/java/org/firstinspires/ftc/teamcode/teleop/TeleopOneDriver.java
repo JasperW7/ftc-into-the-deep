@@ -45,7 +45,6 @@ public class TeleopOneDriver extends LinearOpMode{
     double slidePE = 0.093, slideIE = 0, slideDE = 0.003, slideFE = 0;
     double slideTarget = 0.0;
 
-    boolean leftBumperPrevState = false;
     boolean rightBumperPrevState = false;
     boolean hangPrev = false;
     boolean claw = false;
@@ -54,8 +53,6 @@ public class TeleopOneDriver extends LinearOpMode{
     boolean slideExtended = false;
     boolean retractSlide = false;
     boolean retracted = true;
-    boolean xHold = false;
-    boolean xPress = false;
     boolean slideOuttake = false;
     boolean micro = false;
     boolean intakePrev = false;
@@ -177,11 +174,11 @@ public class TeleopOneDriver extends LinearOpMode{
                 slideTarget += (y>0 && slideTarget<slideMax) ? slideInterval*y/1.5:0;
                 slideTarget += (y<0 && slideTarget>500) ? slideInterval*y/1.5:0;
                 if (gamepad1.left_trigger > 0 && rotationPos < 1) {
-                    rotationPos += gamepad1.left_trigger / 20;
+                    rotationPos += gamepad1.left_trigger / 100;
                     if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
                 }
                 if (gamepad1.right_trigger > 0 && rotationPos > 0) {
-                    rotationPos -= gamepad1.right_trigger / 20;
+                    rotationPos -= gamepad1.right_trigger / 100;
                     if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
                 }
                 rotation.setPosition(rotationPos);
@@ -208,7 +205,7 @@ public class TeleopOneDriver extends LinearOpMode{
             if (mode==Mode.INTAKING || micro){
                 slideMax = 2500;
             }else{
-                slideMax = 2800;
+                slideMax = 4800;
             }
 
 
@@ -233,7 +230,7 @@ public class TeleopOneDriver extends LinearOpMode{
 //  SLIDES
             slideTarget += (gamepad1.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
             slideTarget -= (gamepad1.dpad_down && slideTarget>500) ? slideInterval : 0;
-            slideTarget = Math.min(2800, Math.max(200, slideTarget));
+            slideTarget = Math.min(4800, Math.max(200, slideTarget));
 
             slideExtended = slideTarget > 300;
 
@@ -315,6 +312,7 @@ public class TeleopOneDriver extends LinearOpMode{
                     boolean intakeCurr = gamepad1.left_bumper;
                     if (intakeCurr && !intakePrev){
                         micro = true;
+                        rotationPos = 0.5;
                         slideTarget = 1500;
                         mode = Mode.INTAKING;
                         init = true;
@@ -338,7 +336,8 @@ public class TeleopOneDriver extends LinearOpMode{
 
 //  CHANGE TO REST
                     if (slideTarget <= 250){
-                        mode = Mode.REST; //retract slide < 70; rest <= 80; intaking > 80
+                        mode = Mode.REST;
+                        init = true;//retract slide < 70; rest <= 80; intaking > 80
                     }
 
                     break;
