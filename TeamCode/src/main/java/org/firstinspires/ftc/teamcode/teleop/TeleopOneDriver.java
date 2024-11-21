@@ -127,6 +127,19 @@ public class TeleopOneDriver extends LinearOpMode{
         slideMotor.setPower(0);
     }
 
+//
+//                        /^--^\     /^--^\     /^--^\
+//                        \____/     \____/     \____/
+//                       /      \   /      \   /      \
+//                      |        | |        | |        |
+//                       \__  __/   \__  __/   \__  __/
+//  |^|^|^|^|^|^|^|^|^|^|^|^\ \^|^|^|^/ /^|^|^|^|^\ \^|^|^|^|^|^|^|^|^|^|^|^|
+//  | | | | | | | | | | | | |\ \| | |/ /| | | | | | \ \ | | | | | | | | | | |
+//  ########################/ /######\ \###########/ /#######################
+//  | | | | | | | | | | | | \/| | | | \/| | | | | |\/ | | | | | | | | | | | |
+//  |_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|
+
+
     @Override
     public void runOpMode() {
         initHardware();
@@ -241,6 +254,10 @@ public class TeleopOneDriver extends LinearOpMode{
             armTempTarget = Math.min(2500, Math.max(0, armTempTarget));
 
             armPar = (slideTarget > 300) ? 350 : 400;
+
+//             /\_/\
+//            ( o.o )
+//             > ^ <    Purrrr...
 
 
 //  MODES
