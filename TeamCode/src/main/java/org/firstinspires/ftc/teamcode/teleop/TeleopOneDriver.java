@@ -28,7 +28,7 @@ public class TeleopOneDriver extends LinearOpMode{
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.8;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
-    public double armPar = 150, armUp = 2000;
+    public double armPar = 150, armUp = 1900;
     public int slideInterval = 15;
     public double hangClosed = 0.3, hangOpen = 1;
 
@@ -174,11 +174,11 @@ public class TeleopOneDriver extends LinearOpMode{
                 slideTarget += (y>0 && slideTarget<slideMax) ? slideInterval*y/1.5:0;
                 slideTarget += (y<0 && slideTarget>500) ? slideInterval*y/1.5:0;
                 if (gamepad1.left_trigger > 0 && rotationPos < 1) {
-                    rotationPos += gamepad1.left_trigger / 100;
+                    rotationPos -= gamepad1.left_trigger / 80;
                     if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
                 }
                 if (gamepad1.right_trigger > 0 && rotationPos > 0) {
-                    rotationPos -= gamepad1.right_trigger / 100;
+                    rotationPos += gamepad1.right_trigger / 80;
                     if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
                 }
                 rotation.setPosition(rotationPos);
@@ -205,7 +205,7 @@ public class TeleopOneDriver extends LinearOpMode{
             if (mode==Mode.INTAKING || micro){
                 slideMax = 2500;
             }else{
-                slideMax = 4800;
+                slideMax = 5100;
             }
 
 
@@ -230,7 +230,7 @@ public class TeleopOneDriver extends LinearOpMode{
 //  SLIDES
             slideTarget += (gamepad1.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
             slideTarget -= (gamepad1.dpad_down && slideTarget>500) ? slideInterval : 0;
-            slideTarget = Math.min(4800, Math.max(200, slideTarget));
+            slideTarget = Math.min(5100, Math.max(200, slideTarget));
 
             slideExtended = slideTarget > 300;
 
@@ -251,14 +251,16 @@ public class TeleopOneDriver extends LinearOpMode{
                     slideInterval = 24;
                     init = true;
                 } else if (mode == Mode.OUTTAKING) {
-                    retractSlide=true;
-                    slideInterval = 18;
+//                    retractSlide=true;
+//                    slideInterval = 18;
+                    slideTarget = 200;
                 } else if (mode == Mode.INTAKING){
                     micro = false;
                     armTempTarget = 400;
                     wrist.setPosition(wristPerp);
                     armTarget = armTempTarget;
-                    retractSlide = true;
+//                    retractSlide = true;
+                    slideTarget = 200;
                 }
             }
             rightBumperPrevState = rightBumperCurrentState;
@@ -266,7 +268,7 @@ public class TeleopOneDriver extends LinearOpMode{
             if (retractSlide) {
                 if (slideTarget > 200) {
                     retracted = false;
-                    slideTarget -=15;
+                    slideTarget -=30;
                 } else {
                     retracted = true;
                     retractSlide = false;
@@ -309,6 +311,15 @@ public class TeleopOneDriver extends LinearOpMode{
                     armTarget = armTempTarget;
 
 // CHANGE TO INTAKING
+
+
+
+                    if (slideTarget > 300) {
+                        retracted = false;
+                        mode = Mode.INTAKING;
+                        init = true;
+                    }
+
                     boolean intakeCurr = gamepad1.left_bumper;
                     if (intakeCurr && !intakePrev){
                         micro = true;
@@ -345,7 +356,7 @@ public class TeleopOneDriver extends LinearOpMode{
 /** OUTTAKING */
                 case OUTTAKING:
                     if (init) {
-                        armTempTarget = 2000;
+                        armTempTarget = armUp;
                         slideOuttake = true;
                         rotation.setPosition(0.5);
                         wrist.setPosition(wristPar);
@@ -355,7 +366,7 @@ public class TeleopOneDriver extends LinearOpMode{
                     init = false;
 
                     if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<50){
-                        slideTarget = 1200;
+                        slideTarget = slideMax;
                         slideOuttake = false;
                     }
 

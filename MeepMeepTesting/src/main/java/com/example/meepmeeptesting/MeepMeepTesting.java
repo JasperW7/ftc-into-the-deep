@@ -9,7 +9,7 @@ import org.rowlandhall.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
     public static void main(String[] args) {
-        MeepMeep meepMeep = new MeepMeep(800);
+        MeepMeep meepMeep = new MeepMeep(500);
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
@@ -44,17 +44,17 @@ public class MeepMeepTesting {
                         .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(270))// high basket 1
                         .setReversed(false)
 
-                        .splineToLinearHeading(new Pose2d(-57,-38,Math.toRadians(90)),Math.toRadians(90)) //to second sample
+                        .splineToLinearHeading(new Pose2d(-58,-38,Math.toRadians(90)),Math.toRadians(90)) //to second sample
                         .setReversed(true)
                         .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(270))// high basket 2
                         .setReversed(false)
 
-                        .splineToLinearHeading(new Pose2d(-55,-24,Math.toRadians(180)),Math.toRadians(180)) // to third sample
+                        .splineToLinearHeading(new Pose2d(-55,-25,Math.toRadians(180)),Math.toRadians(180)) // to third sample
                         .setReversed(true)
                         .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(270))// high basket 3
                         .setReversed(false)
 
-                        .splineToLinearHeading(new Pose2d(-26,-10,Math.toRadians(180)),Math.toRadians(0)) //park
+                        .splineToLinearHeading(new Pose2d(-26,-10,Math.toRadians(0)),Math.toRadians(0)) //park
 
 
 
