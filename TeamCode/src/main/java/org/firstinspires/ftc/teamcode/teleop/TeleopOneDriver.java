@@ -25,7 +25,7 @@ public class TeleopOneDriver extends LinearOpMode{
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawL, clawR, hang;
 
-    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.8;
+    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.7;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
     public double armPar = 150, armUp = 1900;
@@ -61,7 +61,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
-    double slideMax = 2500;
+    double slideMax = 2900;
 
     public enum Mode {
         REST,
@@ -190,7 +190,7 @@ public class TeleopOneDriver extends LinearOpMode{
 //            slideMotor.setPower((slideTarget > 60 && s
 //            lideTarget < 800) ? slidePIDF(slideTarget, slideMotor) : 0);
 
-            if (armTarget >= 0 && armTarget <= 2500) {
+            if (armTarget >= 0 && armTarget <= 2200) {
                 armMotor.setPower(armPIDF(armTarget, armMotor));
             }else{
                 armMotor.setPower(0);
@@ -203,7 +203,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
             if (mode==Mode.INTAKING || micro){
-                slideMax = 2500;
+                slideMax = 2900;
             }else{
                 slideMax = 5100;
             }
@@ -238,7 +238,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
             armTempTarget += (gamepad1.left_trigger > 0 && !micro) ? 3 : 0;
             armTempTarget -= (gamepad1.right_trigger > 0 && !micro) ? 3 : 0;
-            armTempTarget = Math.min(2500, Math.max(0, armTempTarget));
+            armTempTarget = Math.min(2200, Math.max(0, armTempTarget));
 
             armPar = (slideTarget > 300) ? 350 : 400;
 
