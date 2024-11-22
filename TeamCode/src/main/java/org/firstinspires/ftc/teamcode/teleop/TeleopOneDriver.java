@@ -253,7 +253,7 @@ public class TeleopOneDriver extends LinearOpMode{
             armTempTarget -= (gamepad1.right_trigger > 0 && !micro) ? 3 : 0;
             armTempTarget = Math.min(2500, Math.max(0, armTempTarget));
 
-            armPar = (slideTarget > 300) ? 350 : 400;
+            armPar = (slideTarget > 300) ? 300 : 350;
 
 //             /\_/\
 //            ( o.o )
@@ -268,12 +268,11 @@ public class TeleopOneDriver extends LinearOpMode{
                     slideInterval = 24;
                     init = true;
                 } else if (mode == Mode.OUTTAKING) {
-//                    retractSlide=true;
-//                    slideInterval = 18;
+                    retractSlide=true;
                     slideTarget = 200;
                 } else if (mode == Mode.INTAKING){
                     micro = false;
-                    armTempTarget = 400;
+                    armTempTarget = 350;
                     wrist.setPosition(wristPerp);
                     armTarget = armTempTarget;
 //                    retractSlide = true;
@@ -283,11 +282,8 @@ public class TeleopOneDriver extends LinearOpMode{
             rightBumperPrevState = rightBumperCurrentState;
 // RETRACT SLIDE
             if (retractSlide) {
-                if (slideTarget > 200) {
-                    retracted = false;
-                    slideTarget -=30;
-                } else {
-                    retracted = true;
+                slideTarget = 200;
+                if (slideMotor.getCurrentPosition() < 500) {
                     retractSlide = false;
                     mode=Mode.REST;
                     init = true;
@@ -360,7 +356,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
 //  LOWER ARM
-                    armTarget = (gamepad1.left_bumper) ? 150 : armTempTarget;
+                    armTarget = (gamepad1.left_bumper) ? armPar : armTempTarget;
 
 //  CHANGE TO REST
                     if (slideTarget <= 250){
