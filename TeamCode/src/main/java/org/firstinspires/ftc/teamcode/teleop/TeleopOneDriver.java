@@ -25,10 +25,10 @@ public class TeleopOneDriver extends LinearOpMode{
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawL, clawR, hang;
 
-    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.7;
+    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.65;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
-    public double armPar = 150, armUp = 1900;
+    public double armPar = 350, armUp = 1900;
     public int slideInterval = 15;
     public double hangClosed = 0.3, hangOpen = 1;
 
@@ -119,6 +119,7 @@ public class TeleopOneDriver extends LinearOpMode{
         armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         armMotor.setPower(0);
+        armTarget = 500;
 
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -186,13 +187,13 @@ public class TeleopOneDriver extends LinearOpMode{
 //                }
                 slideTarget += (y>0 && slideTarget<slideMax) ? slideInterval*y/1.5:0;
                 slideTarget += (y<0 && slideTarget>500) ? slideInterval*y/1.5:0;
-                if (gamepad1.left_trigger > 0 && rotationPos < 1) {
+                if (gamepad1.left_trigger > 0 && rotationPos >=0 ) {
                     rotationPos -= gamepad1.left_trigger / 80;
-                    if (rotationPos > 1) rotationPos = 1; // Ensure upper bound
+                    if (rotationPos <0) rotationPos = 0; // Ensure upper bound
                 }
-                if (gamepad1.right_trigger > 0 && rotationPos > 0) {
+                if (gamepad1.right_trigger > 0 && rotationPos <=1) {
                     rotationPos += gamepad1.right_trigger / 80;
-                    if (rotationPos < 0) rotationPos = 0; // Ensure lower bound
+                    if (rotationPos >1) rotationPos = 1; // Ensure lower bound
                 }
                 rotation.setPosition(rotationPos);
             }
@@ -253,7 +254,7 @@ public class TeleopOneDriver extends LinearOpMode{
             armTempTarget -= (gamepad1.right_trigger > 0 && !micro) ? 3 : 0;
             armTempTarget = Math.min(2200, Math.max(0, armTempTarget));
 
-            armPar = (slideTarget > 300) ? 300 : 350;
+            armPar = (slideTarget > 300) ? 450 : 500;
 
 //             /\_/\
 //            ( o.o )
@@ -272,7 +273,7 @@ public class TeleopOneDriver extends LinearOpMode{
                     slideTarget = 200;
                 } else if (mode == Mode.INTAKING){
                     micro = false;
-                    armTempTarget = 350;
+                    armTempTarget = 450;
                     wrist.setPosition(wristPerp);
                     armTarget = armTempTarget;
 //                    retractSlide = true;
@@ -356,7 +357,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
 //  LOWER ARM
-                    armTarget = (gamepad1.left_bumper) ? armPar : armTempTarget;
+                    armTarget = (gamepad1.left_bumper) ? 325 : armTempTarget;
 
 //  CHANGE TO REST
                     if (slideTarget <= 250){
