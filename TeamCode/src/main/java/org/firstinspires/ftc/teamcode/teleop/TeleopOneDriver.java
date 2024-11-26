@@ -219,7 +219,7 @@ public class TeleopOneDriver extends LinearOpMode{
             if (mode==Mode.INTAKING || micro){
                 slideMax = 2900;
             }else{
-                slideMax = 5100;
+                slideMax = 5500;
             }
 
 
@@ -244,7 +244,7 @@ public class TeleopOneDriver extends LinearOpMode{
 //  SLIDES
             slideTarget += (gamepad1.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
             slideTarget -= (gamepad1.dpad_down && slideTarget>500) ? slideInterval : 0;
-            slideTarget = Math.min(5100, Math.max(200, slideTarget));
+            slideTarget = Math.min(5500, Math.max(200, slideTarget));
 
             slideExtended = slideTarget > 300;
 
