@@ -38,7 +38,7 @@ public class MeepMeepTesting {
 //                        .strafeRight(2)//high basket
 
                         .splineToConstantHeading(new Vector2d(-10,-38),0) //to high rung
-
+//                        .strafeTo(new Vector2d(-10,-38))
                         .strafeLeft(38) //to first sample
                         .setReversed(true)
                         .splineToLinearHeading(new Pose2d(-50,-50, Math.toRadians(45)), Math.toRadians(270))// high basket 1
