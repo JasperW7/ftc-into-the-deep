@@ -42,9 +42,9 @@ public class TeleopTwoDriver extends LinearOpMode{
 
     // ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    double armP = 0.2, armI = 0, armD = 0.002, armF = 0;
+    double armP = 0.2, armI = 0, armD = 0.001, armF = 0;
     //    extended PID
-    double armPE = 0.2, armIE = 0, armDE = 0.002, armFE = 0;
+    double armPE = 0.2, armIE = 0, armDE = 0.001, armFE = 0;
     double armTarget = 0.0;
 
     //  SLIDES PID

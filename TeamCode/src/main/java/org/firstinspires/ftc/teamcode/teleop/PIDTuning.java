@@ -76,7 +76,7 @@ public class PIDTuning extends LinearOpMode {
         dashboardTelemetry.addData("arm current position: ", currentPosition);
         dashboardTelemetry.addData("arm target: ", target);
         dashboardTelemetry.update();
-        return output/5;
+        return output;
     }
 
     public double slidePIDF(double target, DcMotorEx motor){
