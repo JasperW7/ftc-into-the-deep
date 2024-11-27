@@ -33,7 +33,7 @@ public class TeleopTwoDriver extends LinearOpMode{
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawL, clawR, hang;
 
-    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.8;
+    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
     public double armPar = 150, armUp = 1900;
@@ -192,7 +192,7 @@ public class TeleopTwoDriver extends LinearOpMode{
             if (mode==Mode.INTAKING){
                 slideMax = 2900;
             }else{
-                slideMax = 5500;
+                slideMax = 5270;
             }
 
 
@@ -240,7 +240,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 //  SLIDES
         slideTarget += (gamepad2.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
         slideTarget -= (gamepad2.dpad_down && slideTarget>500) ? slideInterval : 0;
-        slideTarget = Math.min(5500, Math.max(200, slideTarget));
+        slideTarget = Math.min(5270, Math.max(200, slideTarget));
 
         slideExtended = slideTarget > 300;
 
@@ -248,7 +248,7 @@ public class TeleopTwoDriver extends LinearOpMode{
 
         armTempTarget += (gamepad1.left_trigger > 0) ? 3 : 0;
         armTempTarget -= (gamepad1.right_trigger > 0) ? 3 : 0;
-        armTempTarget = Math.min(2200, Math.max(0, armTempTarget));
+        armTempTarget = Math.min(2300, Math.max(0, armTempTarget));
 
         armPar = (slideTarget > 300) ? 450 : 500;
 
@@ -391,27 +391,13 @@ public class TeleopTwoDriver extends LinearOpMode{
                 case HANG:
                     if (init) {
                         clawOpen = false;
-                        armTarget = armPar + 50;
-                        slideTarget = 100;
-                        wrist.setPosition(wristPerp);
+                        armTarget = 2200;
+                        slideTarget = 800;
+                        wrist.setPosition(wristPar);
                         hang.setPosition(hangOpen);
                         rotation.setPosition(0.5);
                     }
 
-//  ARM
-                    armTarget = armTempTarget;
-
-//                    TODO: test direction of motors are correct
-                    if (gamepad1.a) {
-                        hangL.setPower(0.5);
-                        hangR.setPower(0.5);
-                    } else if (gamepad1.b) {
-                        hangL.setPower(-0.5);
-                        hangR.setPower(-0.5);
-                    } else {
-                        hangL.setPower(0);
-                        hangR.setPower(0);
-                    }
 
                     break;
             }
