@@ -28,21 +28,21 @@ public class TeleopOneDriver extends LinearOpMode{
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
     public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
-    public double armPar = 350, armUp = 1900;
+    public double armPar = 325, armUp = 1800;
     public int slideInterval = 15;
     public double hangClosed = 0.3, hangOpen = 1;
 
     //  ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    double armP = 0.2, armI = 0, armD = 0.002, armF = 0;
+    double armP = 0.0025, armI = 0, armD = 0.000023, armF = 0;
     //    extended PID
-    double armPE = 0.2, armIE = 0, armDE = 0.002, armFE = 0;
+    double armPE = 0.003, armIE = 0, armDE = 0.000023, armFE = 0;
     double armTarget = 0.0;
 
     //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    double slideP = 0.093, slideI = 0, slideD = 0.003, slideF = 0;
-    double slidePE = 0.093, slideIE = 0, slideDE = 0.003, slideFE = 0;
+    double slideP = 0.017, slideI = 0, slideD = 0.00018, slideF = 0;
+    double slidePE = 0.045, slideIE = 0, slideDE = 0.0008, slideFE = 0;
     double slideTarget = 0.0;
 
     boolean rightBumperPrevState = false;
@@ -94,6 +94,10 @@ public class TeleopOneDriver extends LinearOpMode{
         bl.setDirection(DcMotorEx.Direction.FORWARD);
         fr.setDirection(DcMotorEx.Direction.REVERSE);
         br.setDirection(DcMotorEx.Direction.REVERSE);
+        fl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        fr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        bl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        br.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         fl.setPower(0);
         fr.setPower(0);
         bl.setPower(0);
@@ -254,7 +258,7 @@ public class TeleopOneDriver extends LinearOpMode{
             armTempTarget -= (gamepad1.right_trigger > 0 && !micro) ? 3 : 0;
             armTempTarget = Math.min(2300, Math.max(0, armTempTarget));
 
-            armPar = (slideTarget > 300) ? 450 : 500;
+            armPar = (slideTarget > 300) ? 325 : 400;
 
 //             /\_/\
 //            ( o.o )
@@ -270,10 +274,10 @@ public class TeleopOneDriver extends LinearOpMode{
                     init = true;
                 } else if (mode == Mode.OUTTAKING) {
                     retractSlide=true;
-                    slideTarget = 200;
+                    slideTarget = 500;
                 } else if (mode == Mode.INTAKING){
                     micro = false;
-                    armTempTarget = 450;
+                    armTempTarget = armPar;
                     wrist.setPosition(wristPerp);
                     armTarget = armTempTarget;
 //                    retractSlide = true;
@@ -284,7 +288,7 @@ public class TeleopOneDriver extends LinearOpMode{
 // RETRACT SLIDE
             if (retractSlide) {
                 slideTarget = 200;
-                if (slideMotor.getCurrentPosition() < 500) {
+                if (slideMotor.getCurrentPosition() < 1800) {
                     retractSlide = false;
                     mode=Mode.REST;
                     init = true;
@@ -357,7 +361,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
 //  LOWER ARM
-                    armTarget = (gamepad1.left_bumper) ? 325 : armTempTarget;
+                    armTarget = (gamepad1.left_bumper) ? 175 : armTempTarget;
 
 //  CHANGE TO REST
                     if (slideTarget <= 250){
@@ -379,7 +383,7 @@ public class TeleopOneDriver extends LinearOpMode{
                     }
                     init = false;
 
-                    if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<50){
+                    if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<1500){
                         slideTarget = slideMax;
                         slideOuttake = false;
                     }
@@ -440,7 +444,7 @@ public class TeleopOneDriver extends LinearOpMode{
         double output = armPIDF.calculate(currentPosition, target);
 
         telemetry.update();
-        return output/5;
+        return output;
     }
 
     public double slidePIDF(double target, DcMotorEx motor){
@@ -453,7 +457,7 @@ public class TeleopOneDriver extends LinearOpMode{
         double output = slidePIDF.calculate(currentPosition, target);
 
         telemetry.update();
-        return output/8;
+        return output;
     }
 
 }
