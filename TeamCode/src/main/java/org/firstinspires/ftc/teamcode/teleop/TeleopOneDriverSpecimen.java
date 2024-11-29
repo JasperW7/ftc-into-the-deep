@@ -316,7 +316,7 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
                 case REST:
                     if (init) {
                         wrist.setPosition(wristPerp);
-                        slideTarget = 200;
+                        slideTarget = 500;
                         armTempTarget = armPar;
                         rotation.setPosition(0.5);
                         hang.setPosition(hangClosed);
