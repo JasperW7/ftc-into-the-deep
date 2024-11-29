@@ -24,9 +24,9 @@ public class TeleopOneDriverSample extends LinearOpMode{
     Servo rotation, wrist, clawL, clawR, hang;
 
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
-    public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
+    public double clawLOpen = 1.0, clawLClose = 0.52, clawROpen = 0.0, clawRClose = 0.48;
     public double rotationPos = 0.5;
-    public double armPar = 325, armUp = 1800;
+    public double armPar = 325, armUp = 1650;
     public int slideInterval = 15;
     public double hangClosed = 0.3, hangOpen = 1;
 
@@ -41,7 +41,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
     double slideP = 0.017, slideI = 0, slideD = 0.00018, slideF = 0;
     double slidePE = 0.045, slideIE = 0, slideDE = 0.0008, slideFE = 0;
-    double slideTarget = 0.0;
+    double slideTarget = 0.0;v
 
     boolean rightBumperPrevState = false;
     boolean hangPrev = false;
@@ -316,7 +316,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
                 case REST:
                     if (init) {
                         wrist.setPosition(wristPerp);
-                        slideTarget = 500;
+                        slideTarget = 200;
                         armTempTarget = armPar;
                         rotation.setPosition(0.5);
                         hang.setPosition(hangClosed);
@@ -359,7 +359,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
 
 
 //  LOWER ARM
-                    armTarget = (gamepad1.left_bumper) ? 175 : armTempTarget;
+                    armTarget = (gamepad1.left_bumper) ? 100 : armTempTarget;
 
 //  CHANGE TO REST
                     if (slideTarget <= 250){
