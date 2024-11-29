@@ -3,13 +3,11 @@ package org.firstinspires.ftc.teamcode.teleop;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 
@@ -19,14 +17,14 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @Config
 @TeleOp
-public class TeleopOneDriver extends LinearOpMode{
+public class TeleopOneDriverSpecimen extends LinearOpMode{
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawL, clawR, hang;
 
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
-    public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
+    public double clawLOpen = 1.0, clawLClose = 0.52, clawROpen = 0.0, clawRClose = 0.48;
     public double rotationPos = 0.5;
     public double armPar = 325, armUp = 1800;
     public int slideInterval = 15;
@@ -61,7 +59,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
-    double slideMax = 2900;
+    double slideMax = 3000;
 
     public enum Mode {
         REST,
@@ -223,7 +221,7 @@ public class TeleopOneDriver extends LinearOpMode{
             if (mode==Mode.INTAKING || micro){
                 slideMax = 2900;
             }else{
-                slideMax = 5300;
+                slideMax = 3000;
             }
 
 
@@ -258,7 +256,7 @@ public class TeleopOneDriver extends LinearOpMode{
             armTempTarget -= (gamepad1.right_trigger > 0 && !micro) ? 3 : 0;
             armTempTarget = Math.min(2300, Math.max(0, armTempTarget));
 
-            armPar = (slideTarget > 300) ? 325 : 400;
+            armPar = (slideTarget > 300) ? 325 : 225;
 
 //             /\_/\
 //            ( o.o )
@@ -361,7 +359,7 @@ public class TeleopOneDriver extends LinearOpMode{
 
 
 //  LOWER ARM
-                    armTarget = (gamepad1.left_bumper) ? 175 : armTempTarget;
+                    armTarget = (gamepad1.left_bumper) ? 100 : armTempTarget;
 
 //  CHANGE TO REST
                     if (slideTarget <= 250){
@@ -383,16 +381,18 @@ public class TeleopOneDriver extends LinearOpMode{
                     }
                     init = false;
 
-                    if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<1500){
-                        slideTarget = slideMax;
+//                    if (gamepad1.left_bumper){
+//                        wrist.setPosition(wristOuttake);
+//                    }else{
+//                        wrist.setPosition(wristPar);
+//                    }
+
+                    if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<1000){
+                        wrist.setPosition(wristOuttake);
+                        slideTarget = 2100;
                         slideOuttake = false;
                     }
 
-                    if (gamepad1.left_bumper){
-                        wrist.setPosition(wristOuttake);
-                    }else{
-                        wrist.setPosition(wristPar);
-                    }
 
 //  ARM
                     armTarget = armTempTarget;
