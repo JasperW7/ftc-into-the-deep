@@ -21,12 +21,12 @@ public class TeleopOneDriverSample extends LinearOpMode{
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
-    Servo rotation, wrist, clawL, clawR, hang;
+    Servo rotation, wrist, clawR, hang;
 
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
-    public double clawLOpen = 1.0, clawLClose = 0.55, clawROpen = 0.0, clawRClose = 0.45;
+    public double clawROpen = 0.0, clawRClose = 0.42;
     public double rotationPos = 0.5;
-    public double armPar = 325, armUp = 1800;
+    public double armPar = 325, armUp = 1650;
     public int slideInterval = 15;
     public double hangClosed = 0.3, hangOpen = 1;
 
@@ -84,7 +84,6 @@ public class TeleopOneDriverSample extends LinearOpMode{
 
         rotation = hardwareMap.get(Servo.class,"rotation");
         wrist = hardwareMap.get(Servo.class,"wrist");
-        clawL = hardwareMap.get(Servo.class,"clawL");
         clawR = hardwareMap.get(Servo.class,"clawR");
         hang = hardwareMap.get(Servo.class,"hang");
 
@@ -111,7 +110,6 @@ public class TeleopOneDriverSample extends LinearOpMode{
         hangR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         wrist.setPosition(wristPerp);
-        clawL.setPosition(clawLClose);
         clawR.setPosition(clawRClose);
         rotation.setPosition(0.5);
         hang.setPosition(hangClosed);
@@ -236,10 +234,8 @@ public class TeleopOneDriverSample extends LinearOpMode{
             }
 
             if (!clawOpen){
-                clawL.setPosition(clawLClose);
                 clawR.setPosition(clawRClose);
             }else{
-                clawL.setPosition(clawLOpen);
                 clawR.setPosition(clawROpen);
             }
 
@@ -316,7 +312,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
                 case REST:
                     if (init) {
                         wrist.setPosition(wristPerp);
-                        slideTarget = 500;
+                        slideTarget = 200;
                         armTempTarget = armPar;
                         rotation.setPosition(0.5);
                         hang.setPosition(hangClosed);
@@ -401,8 +397,8 @@ public class TeleopOneDriverSample extends LinearOpMode{
                 case HANG:
                     if (init) {
                         clawOpen = false;
-                        armTarget = 2200;
-                        slideTarget = 800;
+                        armTarget = 1200;
+                        slideTarget = 1300;
                         wrist.setPosition(wristPar);
                         hang.setPosition(hangOpen);
                         rotation.setPosition(0.5);

@@ -21,10 +21,10 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
-    Servo rotation, wrist, clawL, clawR, hang;
+    Servo rotation, wrist, clawR, hang;
 
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
-    public double clawLOpen = 1.0, clawLClose = 0.52, clawROpen = 0.0, clawRClose = 0.48;
+    public double clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
     public double armPar = 325, armUp = 1800;
     public int slideInterval = 15;
@@ -84,7 +84,6 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
 
         rotation = hardwareMap.get(Servo.class,"rotation");
         wrist = hardwareMap.get(Servo.class,"wrist");
-        clawL = hardwareMap.get(Servo.class,"clawL");
         clawR = hardwareMap.get(Servo.class,"clawR");
         hang = hardwareMap.get(Servo.class,"hang");
 
@@ -111,7 +110,6 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
         hangR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         wrist.setPosition(wristPerp);
-        clawL.setPosition(clawLClose);
         clawR.setPosition(clawRClose);
         rotation.setPosition(0.5);
         hang.setPosition(hangClosed);
@@ -191,11 +189,11 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
                 slideTarget += (y<0 && slideTarget>500) ? slideInterval*y/1.5:0;
                 if (gamepad1.left_trigger > 0 && rotationPos >=0 ) {
                     rotationPos -= gamepad1.left_trigger / 80;
-                    if (rotationPos <0) rotationPos = 0; // Ensure upper bound
+                    if (rotationPos <0) rotationPos = 1; // Ensure upper bound
                 }
                 if (gamepad1.right_trigger > 0 && rotationPos <=1) {
                     rotationPos += gamepad1.right_trigger / 80;
-                    if (rotationPos >1) rotationPos = 1; // Ensure lower bound
+                    if (rotationPos >1) rotationPos = 0; // Ensure lower bound
                 }
                 rotation.setPosition(rotationPos);
             }
@@ -236,10 +234,8 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
             }
 
             if (!clawOpen){
-                clawL.setPosition(clawLClose);
                 clawR.setPosition(clawRClose);
             }else{
-                clawL.setPosition(clawLOpen);
                 clawR.setPosition(clawROpen);
             }
 
@@ -256,7 +252,7 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
             armTempTarget -= (gamepad1.right_trigger > 0 && !micro) ? 3 : 0;
             armTempTarget = Math.min(2300, Math.max(0, armTempTarget));
 
-            armPar = (slideTarget > 300) ? 325 : 225;
+            armPar = (slideTarget > 300) ? 325 : 250;
 
 //             /\_/\
 //            ( o.o )
@@ -316,7 +312,7 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
                 case REST:
                     if (init) {
                         wrist.setPosition(wristPerp);
-                        slideTarget = 500;
+                        slideTarget = 200;
                         armTempTarget = armPar;
                         rotation.setPosition(0.5);
                         hang.setPosition(hangClosed);
@@ -375,17 +371,15 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
                         armTempTarget = armUp;
                         slideOuttake = true;
                         rotation.setPosition(0.5);
-                        wrist.setPosition(wristPar);
+
 
 
                     }
+                    if (slideMotor.getCurrentPosition()>800){
+                        wrist.setPosition(wristPar);
+                    }
                     init = false;
-
-//                    if (gamepad1.left_bumper){
-//                        wrist.setPosition(wristOuttake);
-//                    }else{
-//                        wrist.setPosition(wristPar);
-//                    }
+                    slideTarget += (gamepad1.left_bumper && slideTarget<slideMax) ? slideInterval : 0;
 
                     if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<1000){
                         wrist.setPosition(wristOuttake);
