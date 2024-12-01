@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -26,7 +27,7 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
     public double clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
-    public double armPar = 325, armUp = 1800;
+    public double armPar = 325, armUp = 1700;
     public int slideInterval = 15;
     public double hangClosed = 0.3, hangOpen = 1;
 
@@ -40,7 +41,7 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
     //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
     double slideP = 0.017, slideI = 0, slideD = 0.00018, slideF = 0;
-    double slidePE = 0.045, slideIE = 0, slideDE = 0.0008, slideFE = 0;
+    double slidePE = 0.045, slideIE = 0, slideDE = 0.0004, slideFE = 0;
     double slideTarget = 0.0;
 
     boolean rightBumperPrevState = false;
@@ -119,13 +120,25 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
         armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         armMotor.setPower(0);
-        armTarget = 500;
 
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         slideMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         slideMotor.setPower(0);
+
+        armTarget = 800;
+        ElapsedTime timer = new ElapsedTime();
+        while (Math.abs(armMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 5 seconds
+            double power = armPIDF(armTarget, armMotor); // Use the PID controller
+            armMotor.setPower(power);
+
+            // Optionally update telemetry
+            telemetry.addData("Arm Position", armMotor.getCurrentPosition());
+            telemetry.addData("Arm Target", armTarget);
+            telemetry.update();
+        }
+        armMotor.setPower(0);
     }
 
 //
@@ -376,14 +389,13 @@ public class TeleopOneDriverSpecimen extends LinearOpMode{
 
                     }
                     if (slideMotor.getCurrentPosition()>800){
-                        wrist.setPosition(wristPar);
+                        wrist.setPosition(wristOuttake);
                     }
                     init = false;
                     slideTarget += (gamepad1.left_bumper && slideTarget<slideMax) ? slideInterval : 0;
 
-                    if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<1000){
-                        wrist.setPosition(wristOuttake);
-                        slideTarget = 2100;
+                    if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<500){
+                        slideTarget = 1600;
                         slideOuttake = false;
                     }
 

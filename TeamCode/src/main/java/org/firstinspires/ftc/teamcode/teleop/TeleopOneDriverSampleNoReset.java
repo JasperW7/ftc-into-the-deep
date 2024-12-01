@@ -11,14 +11,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-
 
 
 @Config
 @TeleOp
-public class TeleopOneDriverSample extends LinearOpMode{
+public class TeleopOneDriverSampleNoReset extends LinearOpMode{
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
@@ -116,30 +114,31 @@ public class TeleopOneDriverSample extends LinearOpMode{
         hang.setPosition(hangClosed);
 
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         armMotor.setPower(0);
-        armTarget = 800;
+        armTarget = 500;
 
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         slideMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         slideMotor.setPower(0);
 
-        armTarget = 800;
-        ElapsedTime timer = new ElapsedTime();
-        while (Math.abs(armMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 5 seconds
-            double power = armPIDF(armTarget, armMotor); // Use the PID controller
-            armMotor.setPower(power);
-
-            // Optionally update telemetry
-            telemetry.addData("Arm Position", armMotor.getCurrentPosition());
-            telemetry.addData("Arm Target", armTarget);
-            telemetry.update();
-        }
-        armMotor.setPower(0);
+//
+//        armTarget = 800;
+//        ElapsedTime timer = new ElapsedTime();
+//        while (Math.abs(armMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 5 seconds
+//            double power = armPIDF(armTarget, armMotor); // Use the PID controller
+//            armMotor.setPower(power);
+//
+//            // Optionally update telemetry
+//            telemetry.addData("Arm Position", armMotor.getCurrentPosition());
+//            telemetry.addData("Arm Target", armTarget);
+//            telemetry.update();
+//        }
+//        armMotor.setPower(0);
     }
 
 //
@@ -230,7 +229,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
             }
 
 
-            if (mode==Mode.INTAKING || micro){
+            if (mode== Mode.INTAKING || micro){
                 slideMax = 2900;
             }else{
                 slideMax = 5300;
@@ -298,7 +297,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
                 slideTarget = 200;
                 if (slideMotor.getCurrentPosition() < 1800) {
                     retractSlide = false;
-                    mode=Mode.REST;
+                    mode= Mode.REST;
                     init = true;
                 }
 

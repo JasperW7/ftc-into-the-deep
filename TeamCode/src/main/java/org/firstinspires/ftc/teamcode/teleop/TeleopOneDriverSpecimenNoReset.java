@@ -11,23 +11,21 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-
 
 
 @Config
 @TeleOp
-public class TeleopOneDriverSample extends LinearOpMode{
+public class TeleopOneDriverSpecimenNoReset extends LinearOpMode{
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
     DcMotorEx armMotor, slideMotor, fl, fr, bl, br, hangL, hangR = null;
     Servo rotation, wrist, clawR, hang;
 
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
-    public double clawROpen = 0.0, clawRClose = 0.42;
+    public double clawROpen = 0.0, clawRClose = 0.45;
     public double rotationPos = 0.5;
-    public double armPar = 325, armUp = 1650;
+    public double armPar = 325, armUp = 1700;
     public int slideInterval = 15;
     public double hangClosed = 0.3, hangOpen = 1;
 
@@ -60,7 +58,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
-    double slideMax = 2900;
+    double slideMax = 3000;
 
     public enum Mode {
         REST,
@@ -116,37 +114,38 @@ public class TeleopOneDriverSample extends LinearOpMode{
         hang.setPosition(hangClosed);
 
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         armMotor.setPower(0);
-        armTarget = 800;
+        armTarget = 500;
 
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         slideMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         slideMotor.setPower(0);
 
-        armTarget = 800;
-        ElapsedTime timer = new ElapsedTime();
-        while (Math.abs(armMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 5 seconds
-            double power = armPIDF(armTarget, armMotor); // Use the PID controller
-            armMotor.setPower(power);
-
-            // Optionally update telemetry
-            telemetry.addData("Arm Position", armMotor.getCurrentPosition());
-            telemetry.addData("Arm Target", armTarget);
-            telemetry.update();
-        }
-        armMotor.setPower(0);
+//
+//        armTarget = 800;
+//        ElapsedTime timer = new ElapsedTime();
+//        while (Math.abs(armMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 5 seconds
+//            double power = armPIDF(armTarget, armMotor); // Use the PID controller
+//            armMotor.setPower(power);
+//
+//            // Optionally update telemetry
+//            telemetry.addData("Arm Position", armMotor.getCurrentPosition());
+//            telemetry.addData("Arm Target", armTarget);
+//            telemetry.update();
+//        }
+//        armMotor.setPower(0);
     }
 
 //
 //                        /^--^\     /^--^\     /^--^\
 //                        \____/     \____/     \____/
 //                       /      \   /      \   /      \
-//                      |        | |        | |        |
+//                      |    0   | |    1   | |    2   |
 //                       \__  __/   \__  __/   \__  __/
 //  |^|^|^|^|^|^|^|^|^|^|^|^\ \^|^|^|^/ /^|^|^|^|^\ \^|^|^|^|^|^|^|^|^|^|^|^|
 //  | | | | | | | | | | | | |\ \| | |/ /| | | | | | \ \ | | | | | | | | | | |
@@ -230,10 +229,10 @@ public class TeleopOneDriverSample extends LinearOpMode{
             }
 
 
-            if (mode==Mode.INTAKING || micro){
+            if (mode== Mode.INTAKING || micro){
                 slideMax = 2900;
             }else{
-                slideMax = 5300;
+                slideMax = 3000;
             }
 
 
@@ -266,7 +265,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
             armTempTarget -= (gamepad1.right_trigger > 0 && !micro) ? 3 : 0;
             armTempTarget = Math.min(2300, Math.max(0, armTempTarget));
 
-            armPar = (slideTarget > 300) ? 325 : 400;
+            armPar = (slideTarget > 300) ? 325 : 250;
 
 //             /\_/\
 //            ( o.o )
@@ -298,7 +297,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
                 slideTarget = 200;
                 if (slideMotor.getCurrentPosition() < 1800) {
                     retractSlide = false;
-                    mode=Mode.REST;
+                    mode= Mode.REST;
                     init = true;
                 }
 
@@ -369,7 +368,7 @@ public class TeleopOneDriverSample extends LinearOpMode{
 
 
 //  LOWER ARM
-                    armTarget = (gamepad1.left_bumper) ? 175 : armTempTarget;
+                    armTarget = (gamepad1.left_bumper) ? 100 : armTempTarget;
 
 //  CHANGE TO REST
                     if (slideTarget <= 250){
@@ -385,22 +384,21 @@ public class TeleopOneDriverSample extends LinearOpMode{
                         armTempTarget = armUp;
                         slideOuttake = true;
                         rotation.setPosition(0.5);
-                        wrist.setPosition(wristPar);
+
 
 
                     }
+                    if (slideMotor.getCurrentPosition()>800){
+                        wrist.setPosition(wristOuttake);
+                    }
                     init = false;
+                    slideTarget += (gamepad1.left_bumper && slideTarget<slideMax) ? slideInterval : 0;
 
-                    if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<1000){
-                        slideTarget = slideMax;
+                    if (slideOuttake && armTempTarget-armMotor.getCurrentPosition()<500){
+                        slideTarget = 1600;
                         slideOuttake = false;
                     }
 
-                    if (gamepad1.left_bumper){
-                        wrist.setPosition(wristOuttake);
-                    }else{
-                        wrist.setPosition(wristPar);
-                    }
 
 //  ARM
                     armTarget = armTempTarget;
@@ -411,8 +409,8 @@ public class TeleopOneDriverSample extends LinearOpMode{
                 case HANG:
                     if (init) {
                         clawOpen = false;
-                        armTarget = 1200;
-                        slideTarget = 1300;
+                        armTarget = 2200;
+                        slideTarget = 800;
                         wrist.setPosition(wristPar);
                         hang.setPosition(hangOpen);
                         rotation.setPosition(0.5);

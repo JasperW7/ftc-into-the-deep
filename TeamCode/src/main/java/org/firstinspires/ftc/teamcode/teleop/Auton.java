@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import android.os.SystemClock;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.roadrunner.ftc.Encoder;
-import com.acmerobotics.roadrunner.ftc.FlightRecorder;
-import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
-import com.acmerobotics.roadrunner.ftc.RawEncoder;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -29,7 +27,7 @@ public class Auton extends LinearOpMode{
     Servo rotation, wrist, clawR, hang;
     DcMotor par,perp;
     IMU imu;
-    ElapsedTime delay;
+    ElapsedTime delay = new ElapsedTime();
 
     public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
     public double clawROpen = 0.0, clawRClose = 0.45;
@@ -48,13 +46,15 @@ public class Auton extends LinearOpMode{
     //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
     double slideP = 0.017, slideI = 0, slideD = 0.00018, slideF = 0;
-    double slidePE = 0.045, slideIE = 0, slideDE = 0.0008, slideFE = 0;
+    double slidePE = 0.045, slideIE = 0, slideDE = 0.0004, slideFE = 0;
     double slideTarget = 0.0;
     double inPerTick =  120 /206845;
+
 
     boolean finished1,finished2,finished3,finished4,finished5,finished6,finished7,finished8,finished9,finished10 = false;
     boolean init = true;
     boolean slideOuttake = false;
+    double start,curr;
 
 
     public void initHardware() {
@@ -111,7 +111,6 @@ public class Auton extends LinearOpMode{
         armMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         armMotor.setPower(0);
-//        armTarget = 500;
 
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -129,6 +128,19 @@ public class Auton extends LinearOpMode{
         fr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         br.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+
+        armTarget = 800;
+        ElapsedTime timer = new ElapsedTime();
+        while (Math.abs(armMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 5 seconds
+            double power = armPIDF(armTarget, armMotor); // Use the PID controller
+            armMotor.setPower(power);
+
+            // Optionally update telemetry
+            telemetry.addData("Arm Position", armMotor.getCurrentPosition());
+            telemetry.addData("Arm Target", armTarget);
+            telemetry.update();
+        }
+        armMotor.setPower(0);
     }
 
 
@@ -141,96 +153,103 @@ public class Auton extends LinearOpMode{
 
 
         while (!isStopRequested()) {
-            dashboardTelemetry.addData("status","running");
-//  DRIVE
-            if (armTarget >= 0) {
-                armMotor.setPower(armPIDF(armTarget, armMotor));
-            }else{
-                armMotor.setPower(0);
-            }
-            if (slideTarget >= 200) {
-                slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
-            }else{
-                slideMotor.setPower(0);
-            }
-            init = true;
-            if (!finished1){
-                toHighRung();
-            }else{
-                if (!finished2){
-                    armToRung();
-                }else{
-                    if (!finished4){
-                        forward();
-                    }else{
-                        if (!finished5){
-                            strafeLeft();
-                        }else{
-                            if (!finished6){
-                                backToAscent();
-                            }else{
-                                if (!finished7){
-                                    rotate();
-                                }else{
-                                    if (!finished8){
-                                        park();
-                                    }
-                                }
-                            }
-                        }
-                    }
+//            dashboardTelemetry.addData("status","running");
+////  DRIVE
+//            if (armTarget >= 0) {
+//                armMotor.setPower(armPIDF(armTarget, armMotor));
+//            }else{
+//                armMotor.setPower(0);
+//            }
+//            if (slideTarget >= 200) {
+//                slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
+//            }else{
+//                slideMotor.setPower(0);
+//            }
+//            init = true;
+//            if (!finished1){
+//                toHighRung();
+//            }else{
+//                if (!finished2) {
+//                    armToRung();
+//                }
+//                else{
+//                    if (!finished9){
+//                        slideUp();
+//                    }
+//                }
+//                } else{
+//                    if (!finished9){
+//                        armDown();
+//                    }
+//                }
+//                else{
+//                    if (!finished4){
+//                        forward();
+//                    }else{
+//                        if (!finished5){
+//                            strafeLeft();
+//                        }else{
+//                            if (!finished6){
+//                                backToAscent();
+//                            }else{
+//                                if (!finished7){
+//                                    rotate();
+//                                }else{
+//                                    if (!finished8){
+//                                        park();
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+
+
+
+// PID
+                if (armTarget >= 0) {
+                    armMotor.setPower(armPIDF(armTarget, armMotor));
+                } else {
+                    armMotor.setPower(0);
                 }
-            }
+
+                if (slideTarget >= 200) {
+                    slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
+                } else {
+                    slideMotor.setPower(0);
+                }
 
 
 
+// AUTON ACTIONS
+                if (!finished1) {
+                    toHighRung();
+                } else if (!finished2) {
+                    armToRung();
+                } else if (!finished9) {
+                    slideUp();
+                }else if(!finished3){
+                    armDown();
+                }
 
-            telemetry.addData("slide",slideTarget);
-            telemetry.addData("slidecurr",slideMotor.getCurrentPosition());
-            telemetry.addData("arm",armTarget);
-            telemetry.addData("armcurr",armMotor.getCurrentPosition());
-            telemetry.addData("par",fl.getCurrentPosition());
-            telemetry.addData("perp", bl.getCurrentPosition());
-            telemetry.addData("finished1",finished1);
-            telemetry.addData("finished2",finished2);
-            telemetry.addData("finished3",finished3);
+                telemetry.addData("slide",slideTarget);
+                telemetry.addData("slidecurr",slideMotor.getCurrentPosition());
+                telemetry.addData("arm",armTarget);
+                telemetry.addData("armcurr",armMotor.getCurrentPosition());
+                telemetry.addData("par",fl.getCurrentPosition());
+                telemetry.addData("perp", bl.getCurrentPosition());
+                telemetry.addData("finished1",finished1);
+                telemetry.addData("finished2",finished2);
+                telemetry.addData("finished3",finished3);
 
 
-
-
-            telemetry.update();
-            dashboardTelemetry.update();
-
+                telemetry.update();
+                dashboardTelemetry.update();
         }
     }
 
-    public double armPIDF(double target, DcMotorEx motor){
-        if (slideTarget>500) {
-            armPIDF.setPIDF(armPE,armIE,armDE,armFE);
-        } else {
-            armPIDF.setPIDF(armP,armI,armD,armF);
-        }
-        int currentPosition = motor.getCurrentPosition();
-        double output = armPIDF.calculate(currentPosition, target);
-
-        telemetry.update();
-        return output;
-    }
-
-    public double slidePIDF(double target, DcMotorEx motor){
-        if (armTarget>500){
-            slidePIDF.setPIDF(slidePE,slideIE,slideDE,slideFE);
-        }else {
-            slidePIDF.setPIDF(slideP, slideI, slideD, slideF);
-        }
-        int currentPosition = motor.getCurrentPosition();
-        double output = slidePIDF.calculate(currentPosition, target);
-
-        telemetry.update();
-        return output;
-    }
     public void toHighRung(){
-        if (fl.getCurrentPosition()<-34672){ //to high rung //29 inches
+        if (fl.getCurrentPosition()<-30672){ //to high rung //29 inches //28672
             finished1 = true;
             fl.setPower(0);
             fr.setPower(0);
@@ -246,27 +265,43 @@ public class Auton extends LinearOpMode{
     public void armToRung() {
         armTarget = armUp;
         slideOuttake = true;
-        rotation.setPosition(0.5);
-        wrist.setPosition(wristPar);
-
-        if (slideOuttake && armTarget - armMotor.getCurrentPosition() < 1000) {
-            slideOuttake = false;
-            slideTarget = 2050;
+        slideTarget = 700;
+        if (slideTarget - slideMotor.getCurrentPosition()<100) {
             wrist.setPosition(wristOuttake);
-            finished3 = true;
+            waitSec(2);
+            finished2 = true;
+        }
+
+//        rotation.setPosition(0.5);
+//        wrist.setPosition(wristPar);
+
+//        if (slideOuttake && armTarget - armMotor.getCurrentPosition() < 1000 && slideTarget - slideMotor.getCurrentPosition()<500) {
+//            slideOuttake = false;
+
+//        }
+
+    }
+    public void slideUp(){
+        slideTarget = 3000;
+        waitSec(2);
+        if (slideTarget - slideMotor.getCurrentPosition() < 50) {
+            clawR.setPosition(clawROpen);
+            waitSec(2);
+            finished9 = true;
+
 
         }
 
-        if (finished3) {
-            slideTarget = 2500;
-            delay.reset();
+    }
 
-            if (slideTarget - slideMotor.getCurrentPosition() < 50 && delay.seconds() > 5) {
-                clawR.setPosition(clawROpen);
-                finished9 = true;
+    public void armDown(){
+        slideTarget = 200;
+        wrist.setPosition(wristPerp);
 
-            }
-
+        armTarget = armPar;
+        rotation.setPosition(0.5);
+        if (armMotor.getCurrentPosition()<500){
+            finished3 = true;
         }
     }
     public void forward(){
@@ -325,8 +360,55 @@ public class Auton extends LinearOpMode{
         wrist.setPosition(wristPar);
     }
 
+    public double armPIDF(double target, DcMotorEx motor){
+        if (slideTarget>500) {
+            armPIDF.setPIDF(armPE,armIE,armDE,armFE);
+        } else {
+            armPIDF.setPIDF(armP,armI,armD,armF);
+        }
+        int currentPosition = motor.getCurrentPosition();
+        double output = armPIDF.calculate(currentPosition, target);
 
+        telemetry.update();
+        return output;
+    }
 
+    public double slidePIDF(double target, DcMotorEx motor){
+        if (armTarget>500){
+            slidePIDF.setPIDF(slidePE,slideIE,slideDE,slideFE);
+        }else {
+            slidePIDF.setPIDF(slideP, slideI, slideD, slideF);
+        }
+        int currentPosition = motor.getCurrentPosition();
+        double output = slidePIDF.calculate(currentPosition, target);
+
+        telemetry.update();
+        return output;
+    }
+
+    public void waitSec(double seconds) {
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
+        while (opModeIsActive() && timer.seconds() < seconds) {
+            // Update the arm and slide motors with their PID control
+            if (armTarget >= 0) {
+                armMotor.setPower(armPIDF(armTarget, armMotor));
+            } else {
+                armMotor.setPower(0);
+            }
+            if (slideTarget >= 200) {
+                slideMotor.setPower(slidePIDF(slideTarget, slideMotor));
+            } else {
+                slideMotor.setPower(0);
+            }
+
+            // Optionally, update telemetry during the wait
+            telemetry.addData("Waiting", "%.1f seconds remaining", seconds - timer.seconds());
+            telemetry.addData("Arm Position", armMotor.getCurrentPosition());
+            telemetry.addData("Slide Position", slideMotor.getCurrentPosition());
+            telemetry.update();
+        }
+    }
 
 
 
